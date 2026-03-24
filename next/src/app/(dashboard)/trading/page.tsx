@@ -32,7 +32,7 @@ export default async function TradingPage() {
             <p><strong>3. Dry-run режим:</strong> спочатку запусти в dry-run (тестовий) режимі щоб перевірити стратегію без реальних грошей.</p>
             <p><strong>4. Live режим:</strong> після успішного dry-run переключи на live. Бот автоматично відкриватиме та закриватиме позиції.</p>
             <p><strong>5. Моніторинг:</strong> графіки P&amp;L, історія угод та статистика відображаються нижче автоматично.</p>
-            <p className="text-xs mt-3 pt-2 border-t">Freqtrade Web UI: <code>http://your-nas-ip:8082</code> | Стратегії в <code>/volume1/docker/freqtrade/</code></p>
+            <p className="text-xs mt-3 pt-2 border-t">Freqtrade Web UI: <code>http://your-nas-ip:8082</code> | Стратегії в <code>/opt/docker/freqtrade/</code></p>
           </CardContent>
         </Card>
       )}

@@ -954,6 +954,167 @@ Return ONLY the JSON array.
     logger.info("AI insights generation complete")
 
 
+def job_improve_insight_prompts():
+    """Improve insight prompts based on negative user feedback via Gemini API (weekly, Monday 4:00)."""
+    logger.info("Running: improve_insight_prompts")
+    try:
+        import json
+        import urllib.request
+        import urllib.error
+        from datetime import datetime
+
+        # Get Gemini API key
+        gemini_api_key = os.environ.get("GEMINI_API_KEY")
+        if not gemini_api_key:
+            try:
+                with get_conn() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute("""
+                            SELECT s.value FROM secrets s
+                            JOIN users u ON u.id = s.user_id
+                            WHERE s.key = 'gemini_api_key' AND u.role = 'owner'
+                            LIMIT 1
+                        """)
+                        row = cur.fetchone()
+                        if row and row[0]:
+                            try:
+                                from src.encryption import decrypt_value
+                                gemini_api_key = decrypt_value(row[0])
+                            except Exception:
+                                gemini_api_key = row[0]
+            except Exception as e:
+                logger.error("Could not load Gemini API key: %s", e)
+
+        if not gemini_api_key:
+            logger.warning("improve_insight_prompts: no Gemini API key found, skipping")
+            return
+
+        # Query unprocessed negative feedback
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT id, user_id, page, comment, insight_text
+                    FROM insight_feedback
+                    WHERE reaction = 'dislike' AND processed = false
+                """)
+                rows = cur.fetchall()
+
+        if not rows:
+            logger.info("improve_insight_prompts: no unprocessed negative feedback")
+            return
+
+        # Group by (user_id, page)
+        from collections import defaultdict
+        groups = defaultdict(list)
+        for fb_id, user_id, page, comment, insight_text in rows:
+            groups[(user_id, page)].append({
+                "id": fb_id,
+                "comment": comment or "",
+                "insight_text": insight_text or "",
+            })
+
+        improved_count = 0
+
+        for (user_id, page), feedbacks in groups.items():
+            if len(feedbacks) < 2:
+                continue
+
+            # Get current prompt from user_preferences
+            current_prompt = PAGE_INSIGHT_PROMPTS.get(page, "")
+            with get_conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT value FROM user_preferences WHERE user_id = %s AND key = %s",
+                        (user_id, f"insight_prompt_{page}"),
+                    )
+                    row = cur.fetchone()
+                    if row and row[0]:
+                        current_prompt = row[0]
+
+            # Build complaints summary
+            complaints = "\n".join(
+                f"- Insight: \"{fb['insight_text'][:200]}\" | Complaint: \"{fb['comment'][:200]}\""
+                for fb in feedbacks
+            )
+
+            # Call Gemini API
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_api_key}"
+            payload = json.dumps({
+                "contents": [{
+                    "parts": [{
+                        "text": (
+                            "You are an AI prompt engineer. Given the current insight generation prompt "
+                            "and user complaints about the generated insights, improve the prompt to address "
+                            "the user's concerns. Return ONLY the improved prompt text, nothing else.\n\n"
+                            f"Current prompt:\n{current_prompt}\n\n"
+                            f"User complaints ({len(feedbacks)} negative feedbacks):\n{complaints}"
+                        )
+                    }]
+                }]
+            }).encode("utf-8")
+
+            req = urllib.request.Request(
+                gemini_url,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    result = json.loads(resp.read().decode("utf-8"))
+                    improved_prompt = (
+                        result.get("candidates", [{}])[0]
+                        .get("content", {})
+                        .get("parts", [{}])[0]
+                        .get("text", "")
+                        .strip()
+                    )
+            except (urllib.error.URLError, urllib.error.HTTPError) as e:
+                logger.error("Gemini API call failed for user %s page %s: %s", user_id, page, e)
+                continue
+
+            if not improved_prompt:
+                logger.warning("Gemini returned empty prompt for user %s page %s", user_id, page)
+                continue
+
+            # Save improved prompt and mark feedback as processed
+            feedback_ids = [fb["id"] for fb in feedbacks]
+            with get_conn() as conn:
+                with conn.cursor() as cur:
+                    # Upsert improved prompt
+                    cur.execute("""
+                        INSERT INTO user_preferences (user_id, key, value)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT (user_id, key) DO UPDATE SET value = %s
+                    """, (user_id, f"insight_prompt_{page}", improved_prompt, improved_prompt))
+
+                    # Mark feedback as processed
+                    cur.execute(
+                        "UPDATE insight_feedback SET processed = true WHERE id = ANY(%s)",
+                        (feedback_ids,),
+                    )
+
+                    # Log to audit_log
+                    cur.execute("""
+                        INSERT INTO audit_log (user_id, action, details, created_at)
+                        VALUES (%s, 'prompt_improved', %s, NOW())
+                    """, (user_id, json.dumps({
+                        "page": page,
+                        "feedback_count": len(feedbacks),
+                        "old_prompt": current_prompt[:500],
+                        "new_prompt": improved_prompt[:500],
+                    })))
+
+            improved_count += 1
+            logger.info("Improved prompt for user %s page %s (%d feedbacks)", user_id, page, len(feedbacks))
+
+        logger.info("improve_insight_prompts complete: %d prompts improved", improved_count)
+
+    except Exception as e:
+        logger.error("improve_insight_prompts failed: %s", e, exc_info=True)
+
+
 def job_refresh_views():
     """Refresh materialized views."""
     logger.info("Running: refresh_views")
@@ -1016,6 +1177,7 @@ def main():
     scheduler.add_job(job_monthly_ai_report, CronTrigger(day=1, hour=10, minute=0),             id="monthly_ai_report")
     scheduler.add_job(job_generate_snapshots, CronTrigger(day_of_week="mon", hour=3, minute=30), id="generate_snapshots")
     scheduler.add_job(job_generate_ai_insights, CronTrigger(hour=0, minute=15), id="ai_insights")
+    scheduler.add_job(job_improve_insight_prompts, CronTrigger(day_of_week="mon", hour=4, minute=0), id="improve_insight_prompts")
 
     logger.info("Scheduler started with %d jobs.", len(scheduler.get_jobs()))
     for job in scheduler.get_jobs():

@@ -154,15 +154,15 @@ export async function generateMultiStrategyCompose(): Promise<{ ok: boolean; mes
   for (const s of strategies) {
     const port = STRATEGY_PORT_START + s.id;
     const containerName = `freqtrade-s${s.id}`;
-    const configPath = `/volume1/docker/freqtrade/user_data/strategy-configs/strategy-${s.id}`;
+    const configPath = `/opt/docker/freqtrade/user_data/strategy-configs/strategy-${s.id}`;
 
     services[containerName] = {
       image: "freqtradeorg/freqtrade:stable",
       container_name: containerName,
       restart: "unless-stopped",
       volumes: [
-        `/volume1/docker/freqtrade/user_data/strategies:/freqtrade/user_data/strategies:ro`,
-        `/volume1/docker/freqtrade/user_data/data:/freqtrade/user_data/data`,
+        `/opt/docker/freqtrade/user_data/strategies:/freqtrade/user_data/strategies:ro`,
+        `/opt/docker/freqtrade/user_data/data:/freqtrade/user_data/data`,
         `${configPath}/config.json:/freqtrade/user_data/config.json`,
       ],
       command: `trade --config /freqtrade/user_data/config.json --strategy ${s.strategyFile}`,
@@ -184,6 +184,6 @@ export async function generateMultiStrategyCompose(): Promise<{ ok: boolean; mes
 
   return {
     ok: true,
-    message: `Generated configs for ${strategies.length} strategies. Run on NAS:\ncd /volume1/docker/freqtrade/user_data/strategy-configs && for d in strategy-*/; do sudo docker run -d --name freqtrade-$(basename $d) --network pd-frontend-prod -v ...`,
+    message: `Generated configs for ${strategies.length} strategies. Run on server:\ncd /opt/docker/freqtrade/user_data/strategy-configs && for d in strategy-*/; do sudo docker run -d --name freqtrade-$(basename $d) --network pd-frontend-prod -v ...`,
   };
 }

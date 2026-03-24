@@ -14,4 +14,4 @@ COPY . .
 
 RUN python -m compileall -q src/ deploy/ 2>/dev/null || true
 
-CMD ["python", "deploy/scheduler.py"]
+CMD ["python", "deploy/nas/scheduler.py"]

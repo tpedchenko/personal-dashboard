@@ -2,11 +2,11 @@
 # Backup PostgreSQL database
 # Usage: bash deploy/backup-db.sh [prod|dev]
 #
-# Backups saved to: /volume1/docker/backups/pg/
+# Backups saved to: backup directory
 
 ENV=${1:-dev}
 TIMESTAMP=$(date +%Y-%m-%d_%H-%M)
-BACKUP_DIR="/volume1/docker/backups/pg"
+BACKUP_DIR="${BACKUP_DIR:-/opt/docker/backups}"
 
 if [ "$ENV" = "prod" ]; then
   CONTAINER="pd-db-prod"
