@@ -1115,6 +1115,162 @@ def job_improve_insight_prompts():
         logger.error("improve_insight_prompts failed: %s", e, exc_info=True)
 
 
+def job_weekly_insight_report():
+    """Send weekly AI Insight feedback summary via Telegram (Sunday 20:00)."""
+    logger.info("Running: weekly_insight_report")
+    try:
+        from datetime import date, timedelta
+        from collections import defaultdict
+
+        today = date.today()
+        week_ago = (today - timedelta(days=7)).isoformat()
+
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                # Count reactions per page in last 7 days
+                cur.execute("""
+                    SELECT page, reaction, COUNT(*)
+                    FROM insight_feedback
+                    WHERE created_at >= %s
+                    GROUP BY page, reaction
+                    ORDER BY page
+                """, (week_ago,))
+                rows = cur.fetchall()
+
+                # Count prompt improvements in last 7 days
+                cur.execute("""
+                    SELECT COUNT(*)
+                    FROM audit_log
+                    WHERE action = 'prompt_improved'
+                      AND created_at >= %s
+                """, (week_ago,))
+                prompt_improved_count = cur.fetchone()[0]
+
+        if not rows and prompt_improved_count == 0:
+            logger.info("weekly_insight_report: no feedback or prompt changes this week.")
+            return
+
+        # Build per-page summary: {page: {like: N, dislike: N}}
+        page_stats = defaultdict(lambda: {"like": 0, "dislike": 0})
+        for page, reaction, count in rows:
+            page_stats[page][reaction] = count
+
+        # Format message parts
+        parts = []
+        for page in sorted(page_stats):
+            likes = page_stats[page]["like"]
+            dislikes = page_stats[page]["dislike"]
+            segments = []
+            if likes:
+                segments.append(f"{likes} 👍")
+            if dislikes:
+                segments.append(f"{dislikes} 👎")
+            parts.append(f"{', '.join(segments)} on {page}")
+
+        msg = "AI Insights this week: " + ". ".join(parts) + "."
+        if prompt_improved_count:
+            msg += f" Prompt improved {prompt_improved_count} time{'s' if prompt_improved_count != 1 else ''}."
+
+        send_telegram_message(msg, parse_mode=None)
+        logger.info("Weekly insight report sent: %s", msg)
+
+    except Exception as e:
+        logger.error("weekly_insight_report failed: %s", e, exc_info=True)
+
+
+def job_export_dpo_pairs():
+    """Export DPO preference pairs from insight feedback for ML training (weekly, Monday 5:00)."""
+    logger.info("Running: export_dpo_pairs")
+    try:
+        import json
+        from datetime import datetime
+        from pathlib import Path
+
+        MIN_PAIRS = int(os.environ.get("DPO_MIN_PAIRS", "50"))
+        output_path = Path("/data/ml-training/preferences.jsonl")
+
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                # Get all feedback joined with insight data
+                cur.execute("""
+                    SELECT f.user_id, f.page, f.period,
+                           f.reaction, f.insight_id,
+                           ai.insights_json, ai.prompt_used
+                    FROM insight_feedback f
+                    JOIN ai_insights ai ON ai.id = f.insight_id
+                    WHERE f.reaction IN ('like', 'dislike')
+                    ORDER BY f.user_id, f.page, f.period
+                """)
+                rows = cur.fetchall()
+
+        if not rows:
+            logger.info("export_dpo_pairs: no feedback data")
+            return
+
+        # Group by (user_id, page, period)
+        from collections import defaultdict
+        groups = defaultdict(lambda: {"liked": [], "disliked": [], "prompts": set()})
+
+        for user_id, page, period, reaction, insight_id, insights_json, prompt_used in rows:
+            key = (user_id, page, period)
+            entry = {"insight_id": insight_id, "insights_json": insights_json}
+            if reaction == "like":
+                groups[key]["liked"].append(entry)
+            else:
+                groups[key]["disliked"].append(entry)
+            if prompt_used:
+                groups[key]["prompts"].add(prompt_used)
+
+        # Build DPO pairs: each (liked, disliked) combination within same page+period
+        pairs = []
+        for (user_id, page, period), group in groups.items():
+            if not group["liked"] or not group["disliked"]:
+                continue
+
+            prompt_text = next(iter(group["prompts"]), PAGE_INSIGHT_PROMPTS.get(page, f"Analyze {page} data"))
+            system_prompt = f"You are an AI analyst for the {page} page. {prompt_text}"
+
+            for liked in group["liked"]:
+                for disliked in group["disliked"]:
+                    pairs.append({
+                        "prompt": system_prompt,
+                        "chosen": liked["insights_json"],
+                        "rejected": disliked["insights_json"],
+                    })
+
+        logger.info("export_dpo_pairs: found %d pairs (threshold: %d)", len(pairs), MIN_PAIRS)
+
+        if len(pairs) < MIN_PAIRS:
+            logger.info("export_dpo_pairs: below threshold (%d < %d), skipping export", len(pairs), MIN_PAIRS)
+            return
+
+        # Write JSONL
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            for pair in pairs:
+                f.write(json.dumps(pair, ensure_ascii=False) + "\n")
+
+        logger.info("export_dpo_pairs: exported %d pairs to %s", len(pairs), output_path)
+
+        # Log to audit_log
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO audit_log (user_email, action, details, created_at)
+                    VALUES (%s, 'dpo_export', %s, NOW())
+                """, (
+                    os.environ.get("OWNER_EMAIL", "admin@example.com"),
+                    json.dumps({
+                        "pairs_count": len(pairs),
+                        "output_file": str(output_path),
+                        "exported_at": datetime.utcnow().isoformat() + "Z",
+                    }),
+                ))
+
+    except Exception as e:
+        logger.error("export_dpo_pairs failed: %s", e, exc_info=True)
+
+
 def job_refresh_views():
     """Refresh materialized views."""
     logger.info("Running: refresh_views")
@@ -1178,6 +1334,8 @@ def main():
     scheduler.add_job(job_generate_snapshots, CronTrigger(day_of_week="mon", hour=3, minute=30), id="generate_snapshots")
     scheduler.add_job(job_generate_ai_insights, CronTrigger(hour=0, minute=15), id="ai_insights")
     scheduler.add_job(job_improve_insight_prompts, CronTrigger(day_of_week="mon", hour=4, minute=0), id="improve_insight_prompts")
+    scheduler.add_job(job_weekly_insight_report, CronTrigger(day_of_week="sun", hour=20, minute=30), id="weekly_insight_report")
+    scheduler.add_job(job_export_dpo_pairs, CronTrigger(day_of_week="mon", hour=5, minute=0), id="export_dpo_pairs")
 
     logger.info("Scheduler started with %d jobs.", len(scheduler.get_jobs()))
     for job in scheduler.get_jobs():

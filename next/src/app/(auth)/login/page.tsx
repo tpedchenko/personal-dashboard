@@ -1,10 +1,14 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { enterDemoMode } from "@/actions/demo";
 import { LanguageToggle } from "@/components/shared/language-toggle";
 
@@ -20,6 +24,57 @@ const FEATURES = [
 export default function LoginPage() {
   const t = useTranslations("login");
   const ts = useTranslations("settings");
+
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleCredentialsSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      if (isRegister) {
+        // Register first, then sign in
+        const res = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, name }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error || t("error_generic"));
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Sign in with credentials
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(t("error_invalid_credentials"));
+        setLoading(false);
+        return;
+      }
+
+      // Redirect on success
+      window.location.href = "/";
+    } catch {
+      setError(t("error_generic"));
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-8 relative">
@@ -42,6 +97,7 @@ export default function LoginPage() {
       {/* Auth buttons */}
       <Card className="w-full max-w-sm mb-8">
         <CardContent className="space-y-4 pt-6">
+          {/* Google Sign In */}
           <Button
             className="w-full"
             size="lg"
@@ -49,6 +105,19 @@ export default function LoginPage() {
           >
             {t("sign_in_google")}
           </Button>
+
+          {/* GitHub Sign In (optional) */}
+          {process.env.NEXT_PUBLIC_GITHUB_AUTH_ENABLED === "true" && (
+            <Button
+              className="w-full"
+              size="lg"
+              variant="outline"
+              onClick={() => signIn("github", { callbackUrl: "/" })}
+            >
+              {t("sign_in_github")}
+            </Button>
+          )}
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -57,6 +126,84 @@ export default function LoginPage() {
               <span className="bg-card px-2 text-muted-foreground">{t("or")}</span>
             </div>
           </div>
+
+          {/* Email/Password Form */}
+          <form onSubmit={handleCredentialsSubmit} className="space-y-3">
+            {isRegister && (
+              <div className="space-y-1">
+                <Label htmlFor="name">{t("field_name")}</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t("field_name_placeholder")}
+                />
+              </div>
+            )}
+            <div className="space-y-1">
+              <Label htmlFor="email">{t("field_email")}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@example.com"
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="password">{t("field_password")}</Label>
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={isRegister ? t("field_password_min") : ""}
+                required
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-destructive text-center">{error}</p>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              variant="outline"
+              disabled={loading}
+            >
+              {loading
+                ? "..."
+                : isRegister
+                  ? t("register")
+                  : t("sign_in_email")}
+            </Button>
+          </form>
+
+          <p className="text-xs text-muted-foreground text-center">
+            <button
+              type="button"
+              className="underline hover:text-foreground transition-colors"
+              onClick={() => {
+                setIsRegister(!isRegister);
+                setError("");
+              }}
+            >
+              {isRegister ? t("have_account") : t("no_account")}
+            </button>
+          </p>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">{t("or")}</span>
+            </div>
+          </div>
+
           <form action={enterDemoMode}>
             <Button
               type="submit"

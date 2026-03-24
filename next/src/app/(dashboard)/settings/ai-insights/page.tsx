@@ -16,13 +16,20 @@ import {
   HeartPulseIcon,
   DumbbellIcon,
   ShoppingCartIcon,
+  ThumbsUpIcon,
+  RotateCcwIcon,
+  HistoryIcon,
 } from "lucide-react";
 import {
   getAllInsightsForSettings,
   getInsightPrompt,
   setInsightPrompt,
+  resetInsightPrompt,
+  getInsightFeedbackStats,
   type InsightRow,
   type Insight,
+  type FeedbackPageStats,
+  type PromptChange,
 } from "@/actions/insights";
 import { DEFAULT_PROMPTS } from "@/lib/ai-insights-prompts";
 
@@ -100,6 +107,9 @@ export default function AiInsightsSettingsPage() {
   const [editingPrompt, setEditingPrompt] = useState<string | null>(null);
   const [promptDraft, setPromptDraft] = useState("");
   const [savingPrompt, setSavingPrompt] = useState(false);
+  const [feedbackStats, setFeedbackStats] = useState<FeedbackPageStats[]>([]);
+  const [promptChanges, setPromptChanges] = useState<PromptChange[]>([]);
+  const [resettingPrompt, setResettingPrompt] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -108,8 +118,13 @@ export default function AiInsightsSettingsPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const data = await getAllInsightsForSettings();
+      const [data, stats] = await Promise.all([
+        getAllInsightsForSettings(),
+        getInsightFeedbackStats(),
+      ]);
       setRows(data);
+      setFeedbackStats(stats.pageStats);
+      setPromptChanges(stats.promptChanges);
     } catch {
       // ignore
     } finally {
@@ -154,7 +169,26 @@ export default function AiInsightsSettingsPage() {
     }
   }
 
+  async function handleResetPrompt(page: string) {
+    setResettingPrompt(page);
+    try {
+      await resetInsightPrompt(page);
+      setPrompts((prev) => ({ ...prev, [page]: "" }));
+      if (editingPrompt === page) {
+        setPromptDraft(DEFAULT_PROMPTS[page] || "");
+      }
+      // Reload stats to reflect audit log change
+      const stats = await getInsightFeedbackStats();
+      setPromptChanges(stats.promptChanges);
+    } catch {
+      // ignore
+    } finally {
+      setResettingPrompt(null);
+    }
+  }
+
   const grouped = groupInsights(rows);
+  const hasAnyFeedback = feedbackStats.some((s) => s.likes > 0 || s.dislikes > 0);
 
   if (loading) {
     return (
@@ -173,6 +207,70 @@ export default function AiInsightsSettingsPage() {
         <SparklesIcon className="size-5 text-primary" />
         <h2 className="text-lg font-bold">{t("ai_insights_settings")}</h2>
       </div>
+
+      {/* Feedback Stats */}
+      {hasAnyFeedback && (
+        <Card className="overflow-hidden">
+          <div className="flex items-center gap-2 p-4 border-b">
+            <ThumbsUpIcon className="size-4 text-primary" />
+            <span className="font-semibold text-sm">{t("ai_insights_feedback_stats")}</span>
+          </div>
+          <div className="p-4">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground text-left">
+                  <th className="pb-2 font-medium">{t("ai_insights_page")}</th>
+                  <th className="pb-2 font-medium text-center">👍</th>
+                  <th className="pb-2 font-medium text-center">👎</th>
+                  <th className="pb-2 font-medium text-right">{t("ai_insights_last_feedback")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {feedbackStats
+                  .filter((s) => s.likes > 0 || s.dislikes > 0)
+                  .map((stat) => (
+                    <tr key={stat.page} className="border-t border-muted/30">
+                      <td className="py-1.5">{PAGE_LABELS[stat.page] || stat.page}</td>
+                      <td className="py-1.5 text-center text-green-600">{stat.likes}</td>
+                      <td className="py-1.5 text-center text-red-500">{stat.dislikes}</td>
+                      <td className="py-1.5 text-right text-muted-foreground">
+                        {stat.lastFeedback
+                          ? new Date(stat.lastFeedback).toLocaleDateString()
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Prompt Change History */}
+      {promptChanges.length > 0 && (
+        <Card className="overflow-hidden">
+          <div className="flex items-center gap-2 p-4 border-b">
+            <HistoryIcon className="size-4 text-primary" />
+            <span className="font-semibold text-sm">{t("ai_insights_prompt_history")}</span>
+          </div>
+          <div className="p-4 space-y-1.5">
+            {promptChanges.map((change, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between text-xs border-b border-muted/20 pb-1.5 last:border-0"
+              >
+                <div>
+                  <span className="font-medium">{PAGE_LABELS[change.page] || change.page}</span>
+                  <span className="text-muted-foreground ml-2">{change.details.split("|")[1]?.trim()}</span>
+                </div>
+                <span className="text-muted-foreground text-[10px]">
+                  {change.changedAt ? new Date(change.changedAt).toLocaleString() : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {PAGES.map((page) => {
         const Icon = PAGE_ICONS[page] || SparklesIcon;
@@ -207,14 +305,30 @@ export default function AiInsightsSettingsPage() {
               <div className="border-t px-4 pb-4 space-y-3">
                 {/* Prompt editor */}
                 <div className="pt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs h-7"
-                    onClick={() => startEditPrompt(page)}
-                  >
-                    {editingPrompt === page ? "Hide Prompt" : "Edit Prompt"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => startEditPrompt(page)}
+                    >
+                      {editingPrompt === page ? "Hide Prompt" : "Edit Prompt"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 text-muted-foreground"
+                      onClick={() => handleResetPrompt(page)}
+                      disabled={resettingPrompt === page}
+                    >
+                      {resettingPrompt === page ? (
+                        <Loader2Icon className="size-3 animate-spin mr-1" />
+                      ) : (
+                        <RotateCcwIcon className="size-3 mr-1" />
+                      )}
+                      {t("ai_insights_reset_default")}
+                    </Button>
+                  </div>
 
                   {editingPrompt === page && (
                     <div className="mt-2 space-y-2 border rounded-lg p-3 bg-muted/30">

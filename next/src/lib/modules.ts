@@ -3,7 +3,31 @@
  *
  * Each module can be toggled per-user via user_preferences (key: "enabled_modules").
  * When disabled, navigation items and pages for that module are hidden/blocked.
+ *
+ * Global feature flags (env vars) take priority — see lib/features.ts.
  */
+
+import { FEATURES, type FeatureKey } from "./features";
+
+/** Map module keys to feature flag keys */
+const MODULE_TO_FEATURE: Record<string, FeatureKey> = {
+  finance: "finance",
+  investments: "investments",
+  trading: "trading",
+  reporting: "reporting",
+  gym: "gym",
+  my_day: "health",
+  food: "food",
+  list: "shopping",
+  ai_chat: "aiChat",
+};
+
+/** Check if a module is globally enabled via feature flags */
+function isModuleGloballyEnabled(moduleKey: string): boolean {
+  const featureKey = MODULE_TO_FEATURE[moduleKey];
+  if (!featureKey) return true; // No flag → always enabled (dashboard, settings, admin)
+  return FEATURES[featureKey];
+}
 
 export interface ModuleDefinition {
   /** Unique key stored in user_preferences JSON array */
@@ -134,13 +158,16 @@ export function isNavKeyEnabled(navKey: string, enabledModules: string[]): boole
 
   // Finance nav key is special: visible if any of finance/investments/trading/reporting enabled
   if (navKey === "finance") {
-    return enabledModules.some((k) =>
-      ["finance", "investments", "trading", "reporting"].includes(k)
+    const financeModules = ["finance", "investments", "trading", "reporting"];
+    return financeModules.some((k) =>
+      isModuleGloballyEnabled(k) && enabledModules.includes(k)
     );
   }
 
   const mod = ALL_MODULES.find((m) => m.navKeys.includes(navKey));
   if (!mod) return true; // Unknown nav keys are always shown
+  // Check global feature flag first, then user preference
+  if (!isModuleGloballyEnabled(mod.key)) return false;
   return enabledModules.includes(mod.key);
 }
 
@@ -148,6 +175,7 @@ export function isNavKeyEnabled(navKey: string, enabledModules: string[]): boole
 export function isFinanceSubTabEnabled(tabKey: string, enabledModules: string[]): boolean {
   const mod = ALL_MODULES.find((m) => m.financeSubTabKeys?.includes(tabKey));
   if (!mod) return true;
+  if (!isModuleGloballyEnabled(mod.key)) return false;
   return enabledModules.includes(mod.key);
 }
 
@@ -157,6 +185,7 @@ export function isRouteEnabled(pathname: string, enabledModules: string[]): bool
     for (const route of mod.routes) {
       // Check if pathname matches or starts with route
       if (pathname === route || pathname.startsWith(route + "/")) {
+        if (!isModuleGloballyEnabled(mod.key)) return false;
         if (!enabledModules.includes(mod.key)) return false;
       }
     }

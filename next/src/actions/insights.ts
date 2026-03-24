@@ -207,6 +207,15 @@ export async function setInsightPrompt(page: string, prompt: string): Promise<vo
     update: { value: prompt },
     create: { userId: user.id, key: `insight_prompt_${page}`, value: prompt },
   });
+
+  // Log the change to audit_log
+  await prisma.auditLog.create({
+    data: {
+      userEmail: user.email,
+      action: "prompt_changed",
+      details: `${page} | custom prompt saved`,
+    },
+  });
 }
 
 const LANG_NAMES: Record<string, string> = { uk: "Ukrainian", en: "English", es: "Spanish" };
@@ -598,4 +607,89 @@ export async function getInsightFeedback(
     orderBy: { createdAt: "desc" },
   });
   return { reaction: fb?.reaction ?? null };
+}
+
+// ── Feedback Stats Dashboard ──
+
+export type FeedbackPageStats = {
+  page: string;
+  likes: number;
+  dislikes: number;
+  lastFeedback: string | null;
+};
+
+export type PromptChange = {
+  page: string;
+  changedAt: string;
+  details: string;
+};
+
+export async function getInsightFeedbackStats(): Promise<{
+  pageStats: FeedbackPageStats[];
+  promptChanges: PromptChange[];
+}> {
+  const user = await requireUser();
+
+  // Feedback stats grouped by page
+  const feedbacks = await prisma.insightFeedback.findMany({
+    where: { userId: user.id },
+    select: { page: true, reaction: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const statsMap: Record<string, { likes: number; dislikes: number; lastFeedback: Date | null }> = {};
+  for (const fb of feedbacks) {
+    if (!statsMap[fb.page]) {
+      statsMap[fb.page] = { likes: 0, dislikes: 0, lastFeedback: null };
+    }
+    const s = statsMap[fb.page];
+    if (fb.reaction === "like") s.likes++;
+    else if (fb.reaction === "dislike") s.dislikes++;
+    if (!s.lastFeedback || fb.createdAt > s.lastFeedback) {
+      s.lastFeedback = fb.createdAt;
+    }
+  }
+
+  const pages = ["finance", "investments", "my-day", "gym", "exercises", "list"];
+  const pageStats: FeedbackPageStats[] = pages.map((page) => ({
+    page,
+    likes: statsMap[page]?.likes ?? 0,
+    dislikes: statsMap[page]?.dislikes ?? 0,
+    lastFeedback: statsMap[page]?.lastFeedback?.toISOString() ?? null,
+  }));
+
+  // Prompt change history from audit_log
+  const auditRows = await prisma.auditLog.findMany({
+    where: {
+      userEmail: user.email,
+      action: "prompt_changed",
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+
+  const promptChanges: PromptChange[] = auditRows.map((row) => ({
+    page: row.details?.split("|")[0]?.trim() ?? "unknown",
+    changedAt: row.createdAt?.toISOString() ?? "",
+    details: row.details ?? "",
+  }));
+
+  return { pageStats, promptChanges };
+}
+
+export async function resetInsightPrompt(page: string): Promise<void> {
+  const user = await requireUser();
+  // Delete custom prompt — system will fall back to DEFAULT_PROMPTS
+  await prisma.userPreference.deleteMany({
+    where: { userId: user.id, key: `insight_prompt_${page}` },
+  });
+
+  // Log the reset to audit_log
+  await prisma.auditLog.create({
+    data: {
+      userEmail: user.email,
+      action: "prompt_changed",
+      details: `${page} | reset to default`,
+    },
+  });
 }

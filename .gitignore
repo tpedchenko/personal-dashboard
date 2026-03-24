@@ -1,24 +1,50 @@
-node_modules/
-.next/
-.env
-.env.*
-!.env.example
-*.log
-.DS_Store
+# ── Virtual environments ──
+venv/
+test-gui/.venv/
+
+# ── Python cache ──
 __pycache__/
 *.pyc
-venv/
-data/
-*.gguf
-fused-model/
-fused-model-hf/
-*.safetensors
-!adapters/adapter_config.json
-ml-training/*.csv
-ml-training/train.jsonl
-ml-training/valid.jsonl
-ml-training/eval_results.json
-playwright-report/
-test-results/
+*.pyo
 .pytest_cache/
-tests/.auth/
+
+# ── Secrets & credentials (NEVER commit!) ──
+.env
+.env.*
+deploy/config.env
+.streamlit/secrets.toml
+test-gui/auth.json
+
+# ── Database (lives on NAS, NOT in GitHub) ──
+data/
+data_backup_*/
+import/
+
+# ── LLM ──
+ml-training/
+
+# ── Personal/planning notes ──
+4import/
+2do-ai*.md
+banks.md
+db.md
+documentation/
+
+# ── IDE & tools ──
+.vscode/
+.idea/
+.azure/
+.claude/
+.playwright-mcp/
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Deploy examples (keep), secrets (exclude) ──
+# deploy/config.env.example — tracked
+# .streamlit/secrets.toml.example — tracked
+deploy/personal-dash/config.env
+.next/
+ml-training/fused-model/
+ml-training/*.csv

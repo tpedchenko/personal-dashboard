@@ -15,11 +15,12 @@ datasource db {
 // =========================================================================
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  role      String   @default("owner")
-  createdAt DateTime? @default(now()) @map("created_at")
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String?
+  role         String   @default("owner")
+  passwordHash String?  @map("password_hash")
+  createdAt    DateTime? @default(now()) @map("created_at")
 
   preferences   UserPreference[]
   auditLogs     AuditLog[]
