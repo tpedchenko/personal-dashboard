@@ -982,7 +982,7 @@ def job_prod_to_dev_sync():
     """Sync user data from prod PostgreSQL to dev PostgreSQL."""
     logger.info("Running: prod_to_dev_sync")
     try:
-        from deploy.nas.prod_to_dev_sync import run_sync
+        from deploy.prod_to_dev_sync import run_sync
         stats = run_sync()
         logger.info(
             "prod_to_dev_sync done: %d tables, %d rows, %d errors",

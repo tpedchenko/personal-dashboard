@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copy production database to dev environment
-# Usage: bash deploy/nas/copy-prod-to-dev.sh
+# Usage: bash deploy/copy-prod-to-dev.sh
 #
 # Dumps pd-db-prod and restores into pd-db-dev.
 

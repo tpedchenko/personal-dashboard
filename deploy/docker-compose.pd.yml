@@ -40,13 +40,13 @@ services:
   pd-scheduler:
     build:
       context: ../../
-      dockerfile: deploy/nas/pd-Dockerfile
+      dockerfile: deploy/pd-Dockerfile
     image: pd-scheduler:latest
     container_name: pd-scheduler
     restart: unless-stopped
     env_file:
       - /opt/docker/secrets/.pd-prod.env
-    # CMD: python deploy/nas/scheduler.py (from Dockerfile)
+    # CMD: python deploy/scheduler.py (from Dockerfile)
 
   pd-bot:
     image: pd-scheduler:latest

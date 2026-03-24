@@ -1,6 +1,6 @@
 #!/bin/bash
 # Backup PostgreSQL database
-# Usage: bash deploy/nas/backup-db.sh [prod|dev]
+# Usage: bash deploy/backup-db.sh [prod|dev]
 #
 # Backups saved to: /volume1/docker/backups/pg/
 
