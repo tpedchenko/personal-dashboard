@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: tpedchenko/personal-dashboard
+  IMAGE_NAME: tarascloud/personal-dashboard
 
 jobs:
   build-and-push:

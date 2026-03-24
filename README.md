@@ -16,7 +16,7 @@ Open-source, self-hosted personal dashboard for finance, health, fitness, invest
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/tpedchenko/personal-dashboard.git
+git clone https://github.com/tarascloud/personal-dashboard.git
 cd personal-dashboard
 
 # 2. Build and run the Setup Wizard
@@ -48,7 +48,7 @@ Open [http://localhost:3000](http://localhost:3000) — your Personal Dashboard 
 ### Manual Setup (for advanced users)
 
 ```bash
-git clone https://github.com/tpedchenko/personal-dashboard.git
+git clone https://github.com/tarascloud/personal-dashboard.git
 cd personal-dashboard
 cp next/.env.example .env
 # Edit .env

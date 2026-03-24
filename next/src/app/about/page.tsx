@@ -269,7 +269,7 @@ export default function AboutPage() {
             {/* CTA */}
             <div className="flex flex-wrap items-center justify-center gap-4">
               <a
-                href="https://github.com/tpedchenko/personal-dashboard"
+                href="https://github.com/tarascloud/personal-dashboard"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FFC700] to-[#FFA800] px-6 py-3 text-sm font-semibold text-[#26282B] shadow-lg shadow-[#FFC700]/20 transition-all hover:shadow-[#FFC700]/30 hover:brightness-110"
@@ -624,7 +624,7 @@ export default function AboutPage() {
           <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 text-center">
             <div className="flex items-center gap-4">
               <a
-                href="https://github.com/tpedchenko/personal-dashboard"
+                href="https://github.com/tarascloud/personal-dashboard"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-[#9a9ea6] transition-colors hover:text-white"

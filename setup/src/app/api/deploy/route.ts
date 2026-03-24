@@ -87,7 +87,7 @@ function generateDockerCompose(config: Config): string {
 
   const services: Record<string, object> = {
     "pd-app": {
-      image: "ghcr.io/tpedchenko/personal-dashboard:latest",
+      image: "ghcr.io/tarascloud/personal-dashboard:latest",
       container_name: "pd-app",
       restart: "unless-stopped",
       ports: ["3000:3000"],

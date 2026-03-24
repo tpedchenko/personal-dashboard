@@ -14,7 +14,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/tpedchenko/personal-dashboard.git
+git clone https://github.com/tarascloud/personal-dashboard.git
 cd personal-dashboard
 ```
 

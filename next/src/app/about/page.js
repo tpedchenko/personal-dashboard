@@ -132,7 +132,7 @@ function AboutPage() {
 
             {/* CTA */}
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <a href="https://github.com/tpedchenko/pd" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FFC700] to-[#FFA800] px-6 py-3 text-sm font-semibold text-[#26282B] shadow-lg shadow-[#FFC700]/20 transition-all hover:shadow-[#FFC700]/30 hover:brightness-110">
+              <a href="https://github.com/tarascloud/pd" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#FFC700] to-[#FFA800] px-6 py-3 text-sm font-semibold text-[#26282B] shadow-lg shadow-[#FFC700]/20 transition-all hover:shadow-[#FFC700]/30 hover:brightness-110">
                 <lucide_react_1.Github className="h-4 w-4"/>
                 <T en="Get Started" ua="Почати" es="Comenzar"/>
                 <lucide_react_1.ChevronRight className="h-4 w-4"/>
@@ -318,7 +318,7 @@ function AboutPage() {
         <footer className="border-t border-white/[0.06] px-4 py-12 sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-4xl flex-col items-center gap-4 text-center">
             <div className="flex items-center gap-4">
-              <a href="https://github.com/tpedchenko/pd" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#9a9ea6] transition-colors hover:text-white">
+              <a href="https://github.com/tarascloud/pd" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-[#9a9ea6] transition-colors hover:text-white">
                 <lucide_react_1.Github className="h-4 w-4"/>
                 GitHub
               </a>
