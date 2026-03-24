@@ -5,71 +5,68 @@ Thank you for your interest in contributing! This guide will help you get starte
 ## Prerequisites
 
 - **Node.js 22+** (recommended: use [nvm](https://github.com/nvm-sh/nvm))
-- **PostgreSQL 17+** (or use Docker)
-- **Redis 7+** (or use Docker)
-- **Docker & Docker Compose** (for the containerised setup)
+- **Docker & Docker Compose** (for PostgreSQL + Redis)
 
 ## Development Setup
 
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/tarascloud/personal-dashboard.git
-cd personal-dashboard
-```
-
-### 2. Install dependencies
-
-```bash
-cd next
+cd personal-dashboard/next
 npm install
 ```
 
-### 3. Configure environment
-
-```bash
-cp .env.example .env
-# Edit .env — at minimum fill in:
-#   DATABASE_URL, AUTH_SECRET, NEXTAUTH_SECRET,
-#   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ENCRYPTION_KEY
-```
-
-Generate secrets:
-
-```bash
-# Auth secret
-openssl rand -base64 32
-
-# Encryption key (64 hex chars)
-openssl rand -hex 32
-```
-
-### 4. Start the database
-
-Either use the provided Docker Compose:
+### 2. Start PostgreSQL and Redis
 
 ```bash
 cd ..  # back to repo root
 docker compose up -d pg redis
 ```
 
+This starts PostgreSQL 17 on `localhost:5432` and Redis 7 on `localhost:6379` using the root `docker-compose.yml`.
+
 Or point `DATABASE_URL` to your own PostgreSQL instance.
 
-### 5. Run Prisma migrations
+### 3. Configure environment
 
 ```bash
 cd next
-npx prisma migrate deploy   # apply existing migrations
-npx prisma generate          # generate the Prisma client
+cp .env.example .env
 ```
 
-### 6. Start the dev server
+Edit `.env` — at minimum fill in:
+
+| Variable | How to get |
+|----------|-----------|
+| `DATABASE_URL` | `postgresql://pd:pd@localhost:5432/pd` (matches docker-compose) |
+| `PG_PASSWORD` | `pd` (matches docker-compose) |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `NEXTAUTH_SECRET` | Same as AUTH_SECRET |
+| `ENCRYPTION_KEY` | `openssl rand -hex 32` |
+| `GOOGLE_CLIENT_ID` | [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) |
+| `GOOGLE_CLIENT_SECRET` | Same page as above |
+
+GitHub OAuth and all other integrations are optional.
+
+### 4. Run migrations and start
 
 ```bash
+npx prisma migrate deploy
+npx prisma generate
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The first Google OAuth sign-in automatically becomes the **owner** account.
+Open [http://localhost:3000](http://localhost:3000). The first sign-in automatically becomes the **owner** account.
+
+### Authentication
+
+The app supports four auth methods:
+
+- **Google OAuth** — primary, requires Client ID/Secret
+- **GitHub OAuth** — optional, set `GITHUB_ID` + `GITHUB_SECRET`
+- **Passkeys/WebAuthn** — can be added after first login in Settings > Security
+- **Demo mode** — read-only access without OAuth, set `DEMO_SECRET`
 
 ## Running Tests
 
@@ -90,33 +87,70 @@ next/
 ├── public/              # Static assets, screenshots
 ├── src/
 │   ├── actions/         # Server Actions (finance, gym, health, …)
-│   ├── app/             # Next.js App Router pages & API routes
-│   │   ├── (dashboard)/ # Authenticated pages (finance, gym, health, …)
-│   │   ├── about/       # Public /about page
-│   │   ├── api/         # REST endpoints (health, sync, chat, …)
-│   │   └── login/       # Auth pages
-│   ├── components/      # React components (ui/, finance/, gym/, …)
+│   │   ├── dashboard/   # KPI, analytics, trends
+│   │   ├── finance/     # Transactions, budgets, export
+│   │   ├── gym/         # Workouts, exercises, programs
+│   │   ├── reporting/   # Tax reports (UA, ES)
+│   │   └── *.ts         # Top-level actions (chat, food, settings, …)
+│   ├── app/
+│   │   ├── (auth)/      # Login page
+│   │   ├── (dashboard)/ # Authenticated pages
+│   │   │   ├── admin/       # Admin panel
+│   │   │   ├── ai-chat/     # AI assistant
+│   │   │   ├── dashboard/   # Main dashboard
+│   │   │   ├── finance/     # Finance module
+│   │   │   ├── food/        # Food tracking
+│   │   │   ├── gym/         # Gym & workouts
+│   │   │   ├── list/        # Shopping lists
+│   │   │   ├── my-day/      # Daily journal
+│   │   │   ├── reporting/   # Tax reporting
+│   │   │   ├── settings/    # App settings & integrations
+│   │   │   └── trading/     # Freqtrade bot
+│   │   ├── about/       # Public landing page
+│   │   └── api/         # REST endpoints (health, sync, chat, …)
+│   ├── components/      # React components
+│   │   ├── ui/          # shadcn/ui primitives
+│   │   ├── shared/      # Sidebar, language toggle, …
+│   │   └── */           # Module-specific (finance, gym, chat, …)
 │   ├── generated/       # Prisma-generated client (do not edit)
 │   ├── hooks/           # Custom React hooks
 │   └── lib/             # Shared utilities (db, auth, redis, encryption, …)
-└── tests/               # Playwright E2E & Vitest unit tests
+├── tests/               # Playwright E2E & Vitest unit tests
+└── messages/            # i18n translations (en.json, uk.json, es.json)
+
+setup/                   # Setup Wizard (standalone Next.js app)
+deploy/                  # Docker configs for production
+docker-compose.yml       # PostgreSQL + Redis + app (self-hosted)
 ```
 
 ### Key modules
 
-| Module | Description |
-|--------|-------------|
-| **Finance** | Transactions, budgets, accounts, bank sync |
-| **Investments** | Broker positions, NAV charts, P&L |
-| **Health** | Garmin & Withings sync, sleep, HRV |
-| **Gym** | Workouts, exercises, programs, muscle recovery |
-| **My Day** | Daily journal, mood & energy tracking |
-| **Food** | Calorie/protein tracking with AI analysis |
-| **List** | Shopping lists with purchase history |
-| **Trading** | Freqtrade bot control & analytics |
-| **Tax Reporting** | UA (FOP/DPS) and ES (IRPF/Modelo 100) |
-| **AI Chat** | Multi-provider chat with RAG context |
-| **Dashboard** | Unified KPIs, correlations, trends |
+| Module | Pages | Server Actions |
+|--------|-------|---------------|
+| **Finance** | `finance/` | `actions/finance/` |
+| **Investments** | `finance/investments/` | `actions/brokers*.ts` |
+| **Health** | `dashboard/` | `api/sync/garmin`, `api/sync/withings` |
+| **Gym** | `gym/` | `actions/gym/` |
+| **My Day** | `my-day/` | `actions/my-day.ts` |
+| **Food** | `food/` | `actions/food.ts` |
+| **Shopping** | `list/` | `actions/shopping.ts` |
+| **Trading** | `trading/` | `actions/trading/` |
+| **Tax Reporting** | `reporting/` | `actions/reporting/` |
+| **AI Chat** | `ai-chat/` | `actions/chat*.ts` |
+| **Dashboard** | `dashboard/` | `actions/dashboard/` |
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, shadcn/ui, Recharts, cmdk |
+| **Backend** | Next.js App Router, Server Actions, Prisma 7, NextAuth 5 |
+| **Database** | PostgreSQL 17, Redis 7 |
+| **AI** | Vercel AI SDK, Gemini 2.5 Flash, Groq, Ollama (local) |
+| **Auth** | Google OAuth, GitHub OAuth, Passkeys (WebAuthn), Demo mode |
+| **i18n** | next-intl (English, Ukrainian, Spanish) |
+| **PWA** | Serwist service worker |
+| **Testing** | Playwright (E2E), Vitest (unit) |
 
 ## Code Style
 
@@ -124,8 +158,8 @@ next/
 - **Tailwind CSS 4** for styling — no custom CSS files
 - **Prisma** for all database access — no raw SQL in application code
 - **Server Actions** (`src/actions/`) for data mutations
-- **next-intl** for i18n (Ukrainian / English)
-- Format with Prettier (`npm run lint` to check)
+- **next-intl** for i18n — all user-facing strings in `messages/*.json`
+- Format with Prettier: `npm run lint`
 
 ## Pull Request Process
 
