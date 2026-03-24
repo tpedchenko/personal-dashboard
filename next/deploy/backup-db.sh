@@ -1,6 +1,6 @@
 #!/bin/bash
 # Backup PostgreSQL database on NAS
-# Usage: ssh terminal-user@192.168.1.129 'bash -s' < deploy/backup-db.sh
+# Usage: ssh ${DEPLOY_HOST:-user@your-server} 'bash -s' < deploy/backup-db.sh
 # Or add to NAS cron: 0 3 * * * /opt/docker/pd-backups/backup-db.sh
 
 BACKUP_DIR="/opt/docker/pd-backups"

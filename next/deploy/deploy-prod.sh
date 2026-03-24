@@ -11,7 +11,7 @@
 # URL: https://prod.taras.cloud
 set -e
 
-NAS="terminal-user@192.168.1.129"
+NAS="${DEPLOY_HOST:-user@your-server}"
 DOCKER="/usr/local/bin/docker"
 COMPOSE_FILE="/opt/repos/pd/deploy/docker-compose.next-prod.yml"
 REMOTE_DIR="/opt/repos/pd"
@@ -36,7 +36,7 @@ echo "=== Step 2: Transferring image to NAS ==="
 docker save pd-next-prod:latest | gzip | ssh $NAS 'cat > /tmp/pd-next-prod.tar.gz'
 
 echo "=== Step 3: Syncing compose file to NAS ==="
-ssh $NAS "sudo mkdir -p $REMOTE_DIR/deploy/nas"
+ssh $NAS "sudo mkdir -p $REMOTE_DIR/deploy"
 cat deploy/docker-compose.next-prod.yml | ssh $NAS "cat > /tmp/docker-compose.next-prod.yml"
 ssh $NAS "sudo cp /tmp/docker-compose.next-prod.yml $REMOTE_DIR/deploy/"
 
@@ -118,5 +118,5 @@ ssh $NAS "sudo $DOCKER logs --tail 10 pd-next-prod"
 
 echo ""
 echo "=== Done! ==="
-echo "  Local:  http://192.168.1.129:8003"
+echo "  Local:  http://localhost:8003"
 echo "  Public: https://prod.taras.cloud (needs Cloudflare tunnel route)"
