@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "demo_mode",
+      "value": "1774434369.7471e48bedc4f0420e981fa689a0d8d5c48502ec471688999baf7647428fdbd2",
+      "domain": "dev.taras.cloud",
+      "path": "/",
+      "httpOnly": true,
+      "sameSite": "Lax",
+      "secure": true,
+      "expires": 1774434369
+    }
+  ],
+  "origins": []
+}

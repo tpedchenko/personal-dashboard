@@ -1,0 +1,15 @@
+# Scheduler + sync dependencies (no Streamlit)
+python-dotenv~=1.0.0
+garminconnect~=0.2.38
+garth~=0.5.21
+pydantic~=2.0.0
+pandas~=2.3.0
+requests~=2.32.0
+Authlib~=1.6.0
+cryptography~=42.0.0
+python-telegram-bot[job-queue]~=21.0
+groq~=0.4.0
+orjson~=3.9.0
+psycopg2-binary~=2.9.9
+redis~=5.0.0
+bunq-sdk~=1.28.0

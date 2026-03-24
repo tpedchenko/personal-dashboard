@@ -1,0 +1,917 @@
+// Personal Dashboard — Prisma Schema
+// Generated from scripts/pg_schema.sql
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================================================================
+// Auth & Users
+// =========================================================================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  role      String   @default("owner")
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  preferences   UserPreference[]
+  auditLogs     AuditLog[]
+  chatHistory   ChatHistory[]
+  telegramLinks TelegramLink[]
+  aiInsights    AiInsight[]
+  embeddings    Embedding[]
+
+  @@map("users")
+}
+
+model GuestInvite {
+  email     String  @id
+  invitedBy String  @map("invited_by")
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  @@map("guest_invites")
+}
+
+model UserPreference {
+  userId Int     @map("user_id")
+  key    String
+  value  String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, key])
+  @@map("user_preferences")
+}
+
+model AuditLog {
+  id        Int     @id @default(autoincrement())
+  userEmail String  @map("user_email")
+  action    String
+  details   String? @default("")
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  user User @relation(fields: [userEmail], references: [email])
+
+  @@map("audit_log")
+}
+
+model Secret {
+  id     Int     @id @default(autoincrement())
+  userId Int     @map("user_id")
+  key    String
+  value  String?
+
+  @@unique([userId, key])
+  @@map("secrets")
+}
+
+model TelegramLink {
+  telegramId       Int     @id @map("telegram_id")
+  userEmail        String  @map("user_email")
+  telegramUsername String? @default("") @map("telegram_username")
+
+  user User @relation(fields: [userEmail], references: [email])
+
+  @@map("telegram_links")
+}
+
+model TelegramConnectCode {
+  code      String  @id
+  userEmail String  @map("user_email")
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  @@map("telegram_connect_codes")
+}
+
+// =========================================================================
+// Finance
+// =========================================================================
+
+model Transaction {
+  id               Int      @id @default(autoincrement())
+  date             DateTime @db.Date
+  year             Int?
+  month            Int?
+  type             String?
+  subType          String? @map("sub_type")
+  account          String?
+  category         String?
+  amountOriginal   Float?  @map("amount_original")
+  currencyOriginal String? @map("currency_original")
+  amountEur        Float?  @map("amount_eur")
+  nbuRateEurUsed   Float?  @map("nbu_rate_eur_used")
+  description      String?
+  owner            String?
+  externalId       String? @map("external_id")
+  source           String? @default("manual")
+  createdAt        DateTime? @default(now()) @map("created_at")
+  userId           Int     @map("user_id")
+
+  @@index([date], map: "idx_transactions_date")
+  @@index([type, date], map: "idx_transactions_type_date")
+  @@index([account], map: "idx_transactions_account")
+  @@index([category], map: "idx_transactions_category")
+  @@index([date, category, account], map: "idx_transactions_date_category_account")
+  @@map("transactions")
+}
+
+model NbuRate {
+  date         DateTime @map("date") @db.Date
+  currencyCode String   @map("currency_code")
+  rate         Float
+
+  @@id([date, currencyCode])
+  @@map("nbu_rates")
+}
+
+model CustomAccount {
+  id             Int    @id @default(autoincrement())
+  name           String @unique
+  currency       String @default("EUR")
+  isActive       Boolean @default(true) @map("is_active")
+  sortOrder      Int    @default(0) @map("sort_order")
+  initialBalance Float  @default(0) @map("initial_balance")
+  userId         Int    @map("user_id")
+
+  @@map("custom_accounts")
+}
+
+model CategoryFavourite {
+  category String
+  userId   Int    @map("user_id")
+
+  @@id([userId, category])
+  @@map("category_favourites")
+}
+
+model CustomCategory {
+  category String
+  userId   Int    @map("user_id")
+
+  @@id([userId, category])
+  @@map("custom_categories")
+}
+
+model Budget {
+  id        Int     @id @default(autoincrement())
+  category  String
+  amountEur Float   @map("amount_eur")
+  month     String?
+  active    Boolean? @default(true)
+  createdAt DateTime? @default(now()) @map("created_at")
+  userId    Int     @map("user_id")
+
+  @@unique([userId, category, month])
+  @@map("budgets")
+}
+
+model BudgetConfig {
+  id         Int    @id @default(autoincrement())
+  userId     Int    @map("user_id")
+  limitType  String @default("fixed") @map("limit_type")
+  limitValue Float  @default(0) @map("limit_value")
+  createdAt  DateTime? @default(now()) @map("created_at")
+
+  @@map("budget_config")
+}
+
+model MandatoryCategory {
+  id        Int     @id @default(autoincrement())
+  userId    Int     @map("user_id")
+  category  String
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  @@unique([userId, category])
+  @@map("mandatory_categories")
+}
+
+model RecurringTransaction {
+  id         Int     @id @default(autoincrement())
+  name       String
+  amountEur  Float   @map("amount_eur")
+  category   String
+  txType     String? @default("EXPENSE") @map("tx_type")
+  account    String? @default("Taras Mono")
+  dayOfMonth Int?    @default(1) @map("day_of_month")
+  active     Boolean? @default(true)
+  createdAt  DateTime? @default(now()) @map("created_at")
+  userId     Int     @map("user_id")
+
+  @@map("recurring_transactions")
+}
+
+model SavingsGoal {
+  id         Int     @id @default(autoincrement())
+  name       String
+  targetEur  Float   @map("target_eur")
+  currentEur Float?  @default(0) @map("current_eur")
+  deadline   String?
+  active     Boolean? @default(true)
+  createdAt  DateTime? @default(now()) @map("created_at")
+  userId     Int     @map("user_id")
+
+  @@map("savings_goals")
+}
+
+// =========================================================================
+// Daily Log & Lifestyle
+// =========================================================================
+
+model DailyLog {
+  id           Int      @id @default(autoincrement())
+  date         DateTime @db.Date
+  level        Float?
+  moodDelta    Int?    @map("mood_delta")
+  sexCount     Int?    @map("sex_count")
+  sexNote      String? @map("sex_note")
+  bjCount      Int?    @map("bj_count")
+  bjNote       String? @map("bj_note")
+  kidsHours    Float?  @map("kids_hours")
+  kidsNote     String? @map("kids_note")
+  generalNote  String? @map("general_note")
+  energyLevel  Int?    @map("energy_level")
+  stressLevel  Int?    @map("stress_level")
+  focusQuality Int?    @map("focus_quality")
+  alcohol      Int?
+  caffeine     Int?
+  createdAt    DateTime? @default(now()) @map("created_at")
+  userId       Int     @map("user_id")
+
+  @@unique([userId, date])
+  @@index([date], map: "idx_daily_log_date")
+  @@index([userId, date], map: "idx_daily_log_user_date")
+  @@map("daily_log")
+}
+
+// =========================================================================
+// Food
+// =========================================================================
+
+model FoodLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  date          DateTime @db.Date
+  time          String?
+  description   String?
+  weightG       Float?  @map("weight_g")
+  calories      Float?
+  proteinG      Float?  @map("protein_g")
+  fatG          Float?  @map("fat_g")
+  carbsG        Float?  @map("carbs_g")
+  source        String? @default("text")
+  photoFileId   String? @map("photo_file_id")
+  aiRawResponse String? @map("ai_raw_response")
+  confirmed     Boolean? @default(true)
+  createdAt     DateTime? @default(now()) @map("created_at")
+
+  @@index([date], map: "idx_food_log_date")
+  @@index([userId, date], map: "idx_food_log_user_date")
+  @@map("food_log")
+}
+
+// =========================================================================
+// Shopping
+// =========================================================================
+
+model ShoppingItem {
+  id       Int     @id @default(autoincrement())
+  itemName String  @map("item_name")
+  quantity String? @default("1")
+  addedBy  String? @default("app") @map("added_by")
+  addedAt  DateTime? @default(now()) @map("added_at")
+  boughtAt DateTime? @map("bought_at")
+  boughtBy String? @map("bought_by")
+  userId   Int     @map("user_id")
+
+  @@index([boughtAt], map: "idx_shopping_items_bought")
+  @@map("shopping_items")
+}
+
+model ShoppingHistory {
+  id         Int     @id @default(autoincrement())
+  itemName   String  @map("item_name")
+  quantity   String? @default("1")
+  boughtDate DateTime @map("bought_date") @db.Date
+  boughtBy   String? @default("app") @map("bought_by")
+  userId     Int     @map("user_id")
+
+  @@map("shopping_history")
+}
+
+// =========================================================================
+// Garmin
+// =========================================================================
+
+model GarminDaily {
+  date             DateTime @db.Date
+  steps            Int?
+  caloriesTotal    Int?    @map("calories_total")
+  caloriesActive   Int?    @map("calories_active")
+  distanceM        Float?  @map("distance_m")
+  floorsUp         Int?    @map("floors_up")
+  floorsDown       Int?    @map("floors_down")
+  intensityMinutes Int?    @map("intensity_minutes")
+  restingHr        Int?    @map("resting_hr")
+  avgHr            Int?    @map("avg_hr")
+  maxHr            Int?    @map("max_hr")
+  avgStress        Int?    @map("avg_stress")
+  maxStress        Int?    @map("max_stress")
+  bodyBatteryHigh  Int?    @map("body_battery_high")
+  bodyBatteryLow   Int?    @map("body_battery_low")
+  sleepSeconds     Int?    @map("sleep_seconds")
+  sleepScore       Int?    @map("sleep_score")
+  spo2Avg                Float?  @map("spo2_avg")
+  respirationAvg         Float?  @map("respiration_avg")
+  hrvWeeklyAvg           Int?    @map("hrv_weekly_avg")
+  hrvLastNight           Int?    @map("hrv_last_night")
+  hrvStatus              String? @map("hrv_status")
+  trainingReadinessScore Int?    @map("training_readiness_score")
+  trainingStatus         String? @map("training_status")
+  trainingLoad           Float?  @map("training_load")
+  fitnessAge             Int?    @map("fitness_age")
+  syncedAt               DateTime? @default(now()) @map("synced_at")
+  userId                 Int     @map("user_id")
+
+  @@id([userId, date])
+  @@index([date], map: "idx_garmin_daily_date")
+  @@index([userId, date], map: "idx_garmin_daily_user_date")
+  @@map("garmin_daily")
+}
+
+model GarminActivity {
+  activityId              Int      @id @map("activity_id")
+  date                    DateTime @db.Date
+  activityType            String? @map("activity_type")
+  activityName            String? @map("activity_name")
+  durationSeconds         Float?  @map("duration_seconds")
+  distanceM               Float?  @map("distance_m")
+  calories                Int?
+  avgHr                   Int?    @map("avg_hr")
+  maxHr                   Int?    @map("max_hr")
+  avgSpeed                Float?  @map("avg_speed")
+  elevationGain           Float?  @map("elevation_gain")
+  trainingEffectAerobic   Float?  @map("training_effect_aerobic")
+  trainingEffectAnaerobic Float?  @map("training_effect_anaerobic")
+  startTimeLocal          String? @map("start_time_local")
+  syncedAt                DateTime? @default(now()) @map("synced_at")
+  userId                  Int     @map("user_id")
+
+  @@index([date], map: "idx_garmin_activities_date")
+  @@index([userId, date], map: "idx_garmin_activities_user_date")
+  @@map("garmin_activities")
+}
+
+model GarminSleep {
+  date            DateTime @db.Date
+  sleepStart      String? @map("sleep_start")
+  sleepEnd        String? @map("sleep_end")
+  durationSeconds Int?    @map("duration_seconds")
+  deepSeconds     Int?    @map("deep_seconds")
+  lightSeconds    Int?    @map("light_seconds")
+  remSeconds      Int?    @map("rem_seconds")
+  awakeSeconds    Int?    @map("awake_seconds")
+  sleepScore      Int?    @map("sleep_score")
+  syncedAt        DateTime? @default(now()) @map("synced_at")
+  userId          Int     @map("user_id")
+
+  @@id([userId, date])
+  @@index([userId, date], map: "idx_garmin_sleep_user_date")
+  @@map("garmin_sleep")
+}
+
+model GarminHeartRate {
+  date      DateTime @map("date") @db.Date
+  timestamp String   @map("timestamp")
+  heartRate Int?     @map("heart_rate")
+  userId    Int      @map("user_id")
+
+  @@id([date, timestamp])
+  @@map("garmin_heart_rate")
+}
+
+model GarminStaging {
+  id        Int       @id @default(autoincrement())
+  endpoint  String
+  date      DateTime? @db.Date
+  rawJson   String  @map("raw_json")
+  fetchedAt DateTime? @default(now()) @map("fetched_at")
+  userId    Int     @map("user_id")
+
+  @@map("garmin_staging")
+}
+
+model GarminBodyComposition {
+  date           DateTime @db.Date
+  weight         Float?
+  bmi            Float?
+  bodyFatPct     Float?  @map("body_fat_pct")
+  muscleMass     Float?  @map("muscle_mass")
+  boneMass       Float?  @map("bone_mass")
+  bodyWaterPct   Float?  @map("body_water_pct")
+  physiqueRating Int?    @map("physique_rating")
+  metabolicAge   Int?    @map("metabolic_age")
+  visceralFat    Int?    @map("visceral_fat")
+  syncedAt       DateTime? @default(now()) @map("synced_at")
+  userId         Int     @map("user_id")
+
+  @@id([userId, date])
+  @@index([userId, date], map: "idx_garmin_body_comp_user_date")
+  @@map("garmin_body_composition")
+}
+
+// =========================================================================
+// Withings
+// =========================================================================
+
+model WithingsMeasurement {
+  date        DateTime @db.Date
+  weight      Float?
+  fatRatio    Float?  @map("fat_ratio")
+  fatMass     Float?  @map("fat_mass")
+  fatFreeMass Float?  @map("fat_free_mass")
+  heartRate   Int?    @map("heart_rate")
+  bmi         Float?
+  syncedAt    DateTime? @default(now()) @map("synced_at")
+  userId      Int     @map("user_id")
+
+  @@id([userId, date])
+  @@index([date], map: "idx_withings_date")
+  @@map("withings_measurements")
+}
+
+// =========================================================================
+// AI
+// =========================================================================
+
+model Embedding {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  sourceTable String   @map("source_table")
+  sourceId    Int      @map("source_id")
+  text        String
+  embedding   Unsupported("vector(384)")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([sourceTable, sourceId])
+  @@map("embeddings")
+}
+
+model AiNote {
+  id          Int     @id @default(autoincrement())
+  section     String
+  note        String
+  prompt      String? @default("")
+  generatedAt DateTime @default(now()) @map("generated_at")
+  userId      Int     @map("user_id")
+
+  @@unique([userId, section])
+  @@map("ai_notes")
+}
+
+model AiContextSnapshot {
+  id          Int       @id @default(autoincrement())
+  periodType  String    @map("period_type")
+  periodKey   String    @map("period_key")
+  domain      String    @default("all")
+  content     String
+  generatedAt DateTime? @default(now()) @map("generated_at")
+  userId      Int       @map("user_id")
+
+  @@unique([userId, periodType, periodKey, domain])
+  @@map("ai_context_snapshots")
+}
+
+model AiInsight {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  page         String
+  date         String
+  period       String    @default("") // e.g. "2026-03-21", "2026-W12", "2026-03", "2026"
+  insightsJson String    @map("insights_json")
+  promptUsed   String?   @map("prompt_used")
+  model        String    @default("pd-assistant")
+  generationMs Int?      @map("generation_ms")
+  createdAt    DateTime? @default(now()) @map("created_at")
+
+  user     User              @relation(fields: [userId], references: [id])
+  feedback InsightFeedback[]
+
+  @@unique([userId, page, period])
+  @@index([userId, date(sort: Desc)])
+  @@map("ai_insights")
+}
+
+model InsightFeedback {
+  id        Int      @id @default(autoincrement())
+  insightId Int      @map("insight_id")
+  userId    Int      @map("user_id")
+  page      String
+  period    String
+  reaction  String   // "like" | "dislike"
+  comment   String?
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  insight AiInsight @relation(fields: [insightId], references: [id], onDelete: Cascade)
+
+  @@index([processed, reaction])
+  @@index([userId, page])
+  @@map("insight_feedback")
+}
+
+model ChatHistory {
+  id        Int     @id @default(autoincrement())
+  role      String
+  content   String
+  userEmail String? @map("user_email")
+  createdAt DateTime? @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userEmail], references: [email])
+
+  @@index([createdAt], map: "idx_chat_history_created")
+  @@map("chat_history")
+}
+
+// =========================================================================
+// Gym
+// =========================================================================
+
+model GymExercise {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  name             String
+  muscleGroup      String?  @map("muscle_group")
+  secondaryMuscles String?  @map("secondary_muscles")
+  equipment        String?
+  exerciseType     String?  @map("exercise_type")
+  forceType        String?  @map("force_type")
+  level            String?  @default("intermediate")
+  description      String?
+  isCustom         Boolean? @default(false) @map("is_custom")
+  recoveryHours    Int?     @default(72) @map("recovery_hours")
+  nameUa           String?  @map("name_ua")
+  isFavourite      Boolean? @default(false) @map("is_favourite")
+  createdAt        DateTime? @default(now()) @map("created_at")
+
+  workoutExercises GymWorkoutExercise[]
+  programExercises GymProgramExercise[]
+
+  @@unique([userId, name])
+  @@map("gym_exercises")
+}
+
+model GymWorkout {
+  id               Int      @id @default(autoincrement())
+  userId           Int      @map("user_id")
+  date             DateTime @db.Date
+  startTime        String? @map("start_time")
+  endTime          String? @map("end_time")
+  programType      String? @map("program_type")
+  workoutName      String? @map("workout_name")
+  notes            String?
+  durationMinutes  Int?    @map("duration_minutes")
+  garminActivityId Int?    @map("garmin_activity_id")
+  createdAt        DateTime? @default(now()) @map("created_at")
+  calories         Int?
+  avgHr            Int?    @map("avg_hr")
+
+  exercises GymWorkoutExercise[]
+
+  @@index([userId, date], map: "idx_gym_workouts_user_date")
+  @@map("gym_workouts")
+}
+
+model GymWorkoutExercise {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @map("user_id")
+  workoutId     Int     @map("workout_id")
+  exerciseId    Int     @map("exercise_id")
+  orderNum      Int?    @default(0) @map("order_num")
+  notes         String?
+  supersetGroup Int?    @map("superset_group")
+
+  workout  GymWorkout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise GymExercise @relation(fields: [exerciseId], references: [id])
+  sets     GymSet[]
+
+  @@index([workoutId], map: "idx_gym_workout_exercises_workout")
+  @@index([userId, exerciseId], map: "idx_gym_workout_exercises_user_exercise")
+  @@map("gym_workout_exercises")
+}
+
+model GymSet {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  workoutExerciseId Int      @map("workout_exercise_id")
+  setNum            Int      @map("set_num")
+  weightKg          Float?   @map("weight_kg")
+  reps              Int?
+  isWarmup          Boolean? @default(false) @map("is_warmup")
+  isFailure         Boolean? @default(false) @map("is_failure")
+  restSeconds       Int?     @map("rest_seconds")
+  rpe               Float?
+  notes             String?
+  intensity         String?  @default("normal")
+
+  workoutExercise GymWorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([workoutExerciseId], map: "idx_gym_sets_workout_exercise")
+  @@map("gym_sets")
+}
+
+model GymProgram {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @map("user_id")
+  name        String
+  description String?
+  programType String? @map("program_type")
+  daysPerWeek Int?    @default(3) @map("days_per_week")
+  createdAt   DateTime? @default(now()) @map("created_at")
+
+  days GymProgramDay[]
+
+  @@unique([userId, name])
+  @@map("gym_programs")
+}
+
+model GymProgramDay {
+  id        Int     @id @default(autoincrement())
+  userId    Int     @map("user_id")
+  programId Int     @map("program_id")
+  dayNum    Int     @map("day_num")
+  dayName   String  @map("day_name")
+  focus     String?
+
+  program   GymProgram           @relation(fields: [programId], references: [id], onDelete: Cascade)
+  exercises GymProgramExercise[]
+
+  @@map("gym_program_days")
+}
+
+model GymProgramExercise {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @map("user_id")
+  programDayId  Int     @map("program_day_id")
+  exerciseId    Int     @map("exercise_id")
+  orderNum      Int?    @default(0) @map("order_num")
+  targetSets    Int?    @default(3) @map("target_sets")
+  targetReps    String? @default("8-12") @map("target_reps")
+  supersetGroup Int?    @map("superset_group")
+
+  programDay GymProgramDay @relation(fields: [programDayId], references: [id], onDelete: Cascade)
+  exercise   GymExercise   @relation(fields: [exerciseId], references: [id])
+
+  @@map("gym_program_exercises")
+}
+
+// =========================================================================
+// Sync
+// =========================================================================
+
+model SyncFailure {
+  id           Int       @id @default(autoincrement())
+  functionName String    @map("function_name")
+  userId       Int       @map("user_id")
+  error        String
+  context      String?
+  status       String?   @default("new")
+  createdAt    DateTime? @default(now()) @map("created_at")
+  resolvedAt   DateTime? @map("resolved_at")
+
+  @@index([status], map: "idx_sync_failures_status")
+  @@map("sync_failures")
+}
+
+// =========================================================================
+// Tax Reporting
+// =========================================================================
+
+model TaxDeclaration {
+  id            String    @id @default(cuid())
+  userId        Int       @map("user_id")
+  country       String    // "UA" | "ES"
+  type          String    // "F0103309" | "MODELO_100" | "MODELO_720" etc.
+  period        String    // "2025-Q1", "2025-ANNUAL" etc.
+  year          Int
+  quarter       Int?
+  status        String    @default("draft") // draft | signed | submitted | accepted | rejected
+  xmlContent    String?   @map("xml_content") @db.Text
+  signedContent String?   @map("signed_content") @db.Text
+  fileName      String?   @map("file_name")
+  submittedAt   DateTime? @map("submitted_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  receipt Receipt?
+  items   TaxDeclarationItem[]
+
+  @@unique([userId, country, type, period])
+  @@index([userId, country, year])
+  @@index([status])
+  @@map("tax_declarations")
+}
+
+model TaxDeclarationItem {
+  id            String          @id @default(cuid())
+  declarationId String          @map("declaration_id")
+  declaration   TaxDeclaration  @relation(fields: [declarationId], references: [id], onDelete: Cascade)
+  key           String
+  value         String
+  label         String?
+  section       String?
+
+  @@index([declarationId])
+  @@map("tax_declaration_items")
+}
+
+model Receipt {
+  id            String          @id @default(cuid())
+  declarationId String          @unique @map("declaration_id")
+  declaration   TaxDeclaration  @relation(fields: [declarationId], references: [id], onDelete: Cascade)
+  receiptNumber String?         @map("receipt_number")
+  status        String          // accepted | rejected | pending
+  rawContent    String?         @map("raw_content") @db.Text
+  receivedAt    DateTime        @default(now()) @map("received_at")
+
+  @@map("tax_receipts")
+}
+
+model TaxIncomeRecord {
+  id          String   @id @default(cuid())
+  userId      Int      @map("user_id")
+  country     String
+  source      String
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("UAH")
+  date        DateTime @db.Date
+  quarter     Int?
+  year        Int
+  category    String?
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, country, year])
+  @@index([date])
+  @@map("tax_income_records")
+}
+
+model TaxDeadline {
+  id          String    @id @default(cuid())
+  userId      Int       @map("user_id")
+  country     String
+  type        String
+  period      String
+  dueDate     DateTime  @map("due_date") @db.Date
+  description String
+  reminded    Boolean   @default(false)
+  completedAt DateTime? @map("completed_at")
+
+  @@unique([userId, country, type, period])
+  @@index([dueDate])
+  @@map("tax_deadlines")
+}
+
+model TaxDocument {
+  id         String   @id @default(cuid())
+  userId     Int      @map("user_id")
+  country    String
+  docType    String   @map("doc_type")
+  source     String?
+  period     String
+  year       Int
+  month      Int?
+  fileName   String?  @map("file_name")
+  parsedJson String?  @map("parsed_json") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, country, docType, period, source])
+  @@index([userId, country, year])
+  @@map("tax_documents")
+}
+
+model TaxSimulation {
+  id         String   @id @default(cuid())
+  userId     Int      @map("user_id")
+  year       Int
+  regime     String
+  inputJson  String   @map("input_json") @db.Text
+  resultJson String   @map("result_json") @db.Text
+  comunidad  String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, year, regime])
+  @@index([userId, year])
+  @@map("tax_simulations")
+}
+
+model BrokerPosition {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  broker        String    // IBKR, TRADING212, ETORRO
+  symbol        String
+  conid         String?   // IBKR contract ID
+  name          String?
+  quantity      Decimal   @db.Decimal(18, 8)
+  avgCost       Decimal   @map("avg_cost") @db.Decimal(18, 6)
+  marketPrice   Decimal   @map("market_price") @db.Decimal(18, 6)
+  marketValue   Decimal   @map("market_value") @db.Decimal(18, 2)
+  unrealizedPnl Decimal   @map("unrealized_pnl") @db.Decimal(18, 2)
+  realizedPnl   Decimal   @default(0) @map("realized_pnl") @db.Decimal(18, 2)
+  currency      String    @default("USD")
+  assetClass    String    @default("STK") @map("asset_class") // STK, ETF, OPT, FUT, CASH, BOND
+  lastSyncedAt  DateTime  @default(now()) @map("last_synced_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, broker, symbol])
+  @@index([userId, broker])
+  @@map("broker_positions")
+}
+
+model BrokerAccountSummary {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @map("user_id")
+  broker             String   // IBKR, TRADING212, ETORRO
+  accountId          String   @map("account_id")
+  netLiquidation     Decimal  @map("net_liquidation") @db.Decimal(18, 2)
+  totalCashValue     Decimal  @default(0) @map("total_cash_value") @db.Decimal(18, 2)
+  grossPositionValue Decimal  @default(0) @map("gross_position_value") @db.Decimal(18, 2)
+  unrealizedPnl      Decimal  @default(0) @map("unrealized_pnl") @db.Decimal(18, 2)
+  realizedPnl        Decimal  @default(0) @map("realized_pnl") @db.Decimal(18, 2)
+  currency           String   @default("USD")
+  syncedAt           DateTime @default(now()) @map("synced_at")
+
+  @@unique([userId, broker, accountId])
+  @@index([userId, broker])
+  @@map("broker_account_summaries")
+}
+
+model BrokerTransaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  broker      String   // IBKR, TRADING212, ETORRO
+  symbol      String
+  conid       String?
+  type        String   // BUY, SELL, DIVIDEND, INTEREST, FEE, WITHDRAWAL, DEPOSIT
+  quantity    Decimal  @default(0) @db.Decimal(18, 8)
+  price       Decimal  @default(0) @db.Decimal(18, 6)
+  amount      Decimal  @db.Decimal(18, 2)
+  commission  Decimal  @default(0) @db.Decimal(18, 4)
+  currency    String   @default("USD")
+  executedAt  DateTime @map("executed_at")
+  importedAt  DateTime @default(now()) @map("imported_at")
+
+  @@unique([userId, broker, symbol, type, executedAt])
+  @@index([userId, broker])
+  @@index([userId, executedAt])
+  @@map("broker_transactions")
+}
+
+model TradingStrategy {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  name           String
+  strategyFile   String    @map("strategy_file")
+  exchange       String    @default("kraken")
+  stakeCurrency  String    @default("USDT") @map("stake_currency")
+  stakeAmount    String    @default("unlimited") @map("stake_amount")
+  maxOpenTrades  Int       @default(5) @map("max_open_trades")
+  stoploss       Float     @default(-0.05)
+  dryRun         Boolean   @default(true) @map("dry_run")
+  isActive       Boolean   @default(false) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@unique([userId, name])
+  @@index([userId, isActive])
+  @@map("trading_strategies")
+}
+
+// =========================================================================
+// Portfolio Snapshots
+// =========================================================================
+
+model PortfolioSnapshot {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  userId      Int      @map("user_id")
+  totalNav    Float    @map("total_nav")
+  totalPnl    Float    @map("total_pnl")
+  cashEur     Float    @default(0) @map("cash_eur")
+  investedEur Float    @default(0) @map("invested_eur")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("portfolio_snapshots")
+}

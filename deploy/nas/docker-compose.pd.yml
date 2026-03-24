@@ -1,0 +1,62 @@
+# PD services for Mini server (/opt/docker/)
+# This file documents how PD components run on Mini.
+# The actual docker-compose.yml is at /opt/docker/docker-compose.yml on Mini.
+
+services:
+  pd-prod:
+    image: pd-prod:latest
+    container_name: pd-prod
+    restart: unless-stopped
+    ports:
+      - "8003:3000"
+    env_file:
+      - /opt/docker/secrets/.pd-prod.env
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  pd-dev:
+    image: pd-dev:latest
+    container_name: pd-dev
+    restart: unless-stopped
+    ports:
+      - "8002:3000"
+    env_file:
+      - /opt/docker/secrets/.pd-dev.env
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  pd-scheduler:
+    build:
+      context: ../../
+      dockerfile: deploy/nas/pd-Dockerfile
+    image: pd-scheduler:latest
+    container_name: pd-scheduler
+    restart: unless-stopped
+    env_file:
+      - /opt/docker/secrets/.pd-prod.env
+    # CMD: python deploy/nas/scheduler.py (from Dockerfile)
+
+  pd-bot:
+    image: pd-scheduler:latest
+    container_name: pd-bot
+    restart: unless-stopped
+    command: python bot.py
+    env_file:
+      - /opt/docker/secrets/.pd-prod.env
+    # Same image as scheduler, different entry point (bot.py)
+    # Runs Telegram bot with polling mode
+    # 22 commands: /start /help /exp /stats /balance /budget /week
+    #   /mood /health /garmin /food /eat /pr /goal /list /buy /bought
+    #   /cancel /task /tasks /myid /connect

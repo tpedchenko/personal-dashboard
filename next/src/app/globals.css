@@ -1,0 +1,725 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Dashboard semantic colors */
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-net-positive: var(--net-positive);
+  --color-net-negative: var(--net-negative);
+  --color-level-pos: var(--level-pos);
+  --color-protein: var(--protein);
+  --color-fat: var(--fat);
+  --color-carbs: var(--carbs);
+  --color-calories-ok: var(--calories-ok);
+  --color-calories-over: var(--calories-over);
+  --color-weight: var(--weight);
+  --color-steps: var(--steps);
+  --color-strength: var(--strength);
+  --color-cycling: var(--cycling);
+  --color-hr: var(--hr);
+  --color-neutral: var(--neutral);
+  --color-mood: var(--mood);
+}
+
+/* ── Light theme (default) ── */
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #dc2626;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #2563eb;
+  --radius: 0.625rem;
+
+  --chart-1: #2563eb;
+  --chart-2: #059669;
+  --chart-3: #d97706;
+  --chart-4: #7c3aed;
+  --chart-5: #dc2626;
+
+  /* Sidebar */
+  --sidebar: #f1f5f9;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e2e8f0;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #2563eb;
+
+  /* Dashboard semantic tokens (light) */
+  --income: #059669;
+  --expense: #dc2626;
+  --net-positive: #2563eb;
+  --net-negative: #ea580c;
+  --level-pos: #7c3aed;
+  --protein: #2563eb;
+  --fat: #d97706;
+  --carbs: #7c3aed;
+  --calories-ok: #059669;
+  --calories-over: #dc2626;
+  --weight: #2563eb;
+  --steps: #7c3aed;
+  --strength: #d97706;
+  --cycling: #059669;
+  --hr: #2563eb;
+  --neutral: #9ca3af;
+  --mood: #a855f7;
+
+  /* Chart-specific semantic tokens (light) */
+  --chart-income: #22c55e;
+  --chart-expense: #ef4444;
+  --chart-difference: #8b5cf6;
+  --chart-positive: #34d399;
+  --chart-negative: #f87171;
+  --chart-accent: #fbbf24;
+  --chart-muted: #6b7280;
+  --chart-brush: #6b7280;
+  --chart-mood-positive: #22c55e;
+  --chart-mood-negative: #ef4444;
+  --chart-mood-neutral: #94a3b8;
+  --chart-mood-warning: #f97316;
+  --chart-mood-reference: #64748b;
+  --chart-sleep-deep: #1e3a5f;
+  --chart-sleep-rem: #7c3aed;
+  --chart-sleep-light: #60a5fa;
+  --chart-sleep-awake: #f87171;
+  --chart-sleep-score: #fbbf24;
+  --chart-sleep-duration: #60a5fa;
+  --chart-sleep-need: #6b7280;
+  --chart-sleep-bedtime: #7c3aed;
+  --chart-sleep-wake: #f59e0b;
+  --chart-hrv: #8b5cf6;
+  --chart-exercise-weight: #3b82f6;
+  --chart-exercise-1rm: #f59e0b;
+  --chart-exercise-volume: #60a5fa;
+  --chart-exercise-duration: #8b5cf6;
+  --chart-muscle-chest: #ef4444;
+  --chart-muscle-back: #3b82f6;
+  --chart-muscle-shoulders: #eab308;
+  --chart-muscle-biceps: #22c55e;
+  --chart-muscle-triceps: #a855f7;
+  --chart-muscle-legs: #f97316;
+  --chart-muscle-core: #ec4899;
+  --chart-muscle-other: #6b7280;
+  --chart-active-min: #f59e0b;
+  --chart-bmi: #a78bfa;
+  --chart-body-fat: #f59e0b;
+  --chart-calories: #3b82f6;
+  --chart-calorie-target: #ef4444;
+  --chart-ua-income: #3b82f6;
+  --chart-ua-tax: #22c55e;
+  --chart-ua-esv: #f59e0b;
+  --chart-ua-vz: #a855f7;
+  --chart-es-neto: #10b981;
+  --chart-es-irpf: #ef4444;
+  --chart-es-ss: #f59e0b;
+
+  /* Card surfaces */
+  --card-bg-start: #ffffff;
+  --card-bg-end: #f8fafc;
+  --card-hover-border: #cbd5e1;
+  --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --input-bg: #f8fafc;
+  --hover-overlay: rgba(0, 0, 0, 0.03);
+  --skeleton-base: #e2e8f0;
+  --skeleton-shine: #f1f5f9;
+  --scrollbar-track: #f8fafc;
+  --scrollbar-thumb: #cbd5e1;
+}
+
+/* ── Dark theme ── */
+.dark {
+  --background: #0a0f1a;
+  --foreground: #f1f5f9;
+  --card: rgba(255, 255, 255, 0.04);
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.04);
+  --secondary-foreground: #f1f5f9;
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: #a1b0c4;
+  --accent: rgba(255, 255, 255, 0.04);
+  --accent-foreground: #f1f5f9;
+  --destructive: #f87171;
+  --border: rgba(255, 255, 255, 0.06);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #3b82f6;
+
+  --chart-1: #60a5fa;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #f87171;
+
+  /* Sidebar */
+  --sidebar: #111827;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.04);
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #3b82f6;
+
+  /* Dashboard semantic tokens (dark) */
+  --income: #34d399;
+  --expense: #f87171;
+  --net-positive: #60a5fa;
+  --net-negative: #fb923c;
+  --level-pos: #c084fc;
+  --protein: #60a5fa;
+  --fat: #fbbf24;
+  --carbs: #a78bfa;
+  --calories-ok: #34d399;
+  --calories-over: #f87171;
+  --weight: #60a5fa;
+  --steps: #a78bfa;
+  --strength: #f59e0b;
+  --cycling: #34d399;
+  --hr: #60a5fa;
+  --neutral: #6b7280;
+  --mood: #c084fc;
+
+  /* Chart-specific semantic tokens (dark) */
+  --chart-income: #34d399;
+  --chart-expense: #f87171;
+  --chart-difference: #a78bfa;
+  --chart-positive: #34d399;
+  --chart-negative: #f87171;
+  --chart-accent: #fbbf24;
+  --chart-muted: #6b7280;
+  --chart-brush: #6b7280;
+  --chart-mood-positive: #34d399;
+  --chart-mood-negative: #f87171;
+  --chart-mood-neutral: #94a3b8;
+  --chart-mood-warning: #fb923c;
+  --chart-mood-reference: #64748b;
+  --chart-sleep-deep: #1e40af;
+  --chart-sleep-rem: #a78bfa;
+  --chart-sleep-light: #60a5fa;
+  --chart-sleep-awake: #f87171;
+  --chart-sleep-score: #fbbf24;
+  --chart-sleep-duration: #60a5fa;
+  --chart-sleep-need: #6b7280;
+  --chart-sleep-bedtime: #a78bfa;
+  --chart-sleep-wake: #f59e0b;
+  --chart-hrv: #a78bfa;
+  --chart-exercise-weight: #60a5fa;
+  --chart-exercise-1rm: #f59e0b;
+  --chart-exercise-volume: #60a5fa;
+  --chart-exercise-duration: #a78bfa;
+  --chart-muscle-chest: #f87171;
+  --chart-muscle-back: #60a5fa;
+  --chart-muscle-shoulders: #fbbf24;
+  --chart-muscle-biceps: #34d399;
+  --chart-muscle-triceps: #c084fc;
+  --chart-muscle-legs: #fb923c;
+  --chart-muscle-core: #f472b6;
+  --chart-muscle-other: #6b7280;
+  --chart-active-min: #f59e0b;
+  --chart-bmi: #a78bfa;
+  --chart-body-fat: #f59e0b;
+  --chart-calories: #60a5fa;
+  --chart-calorie-target: #f87171;
+  --chart-ua-income: #60a5fa;
+  --chart-ua-tax: #34d399;
+  --chart-ua-esv: #f59e0b;
+  --chart-ua-vz: #c084fc;
+  --chart-es-neto: #34d399;
+  --chart-es-irpf: #f87171;
+  --chart-es-ss: #f59e0b;
+
+  /* Card surfaces */
+  --card-bg-start: rgba(255, 255, 255, 0.05);
+  --card-bg-end: rgba(255, 255, 255, 0.02);
+  --card-hover-border: rgba(255, 255, 255, 0.12);
+  --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --input-bg: rgba(0, 0, 0, 0.3);
+  --hover-overlay: rgba(255, 255, 255, 0.03);
+  --skeleton-base: #1e293b;
+  --skeleton-shine: #2a3a52;
+  --scrollbar-track: #0a0f1a;
+  --scrollbar-thumb: #2d3748;
+}
+
+/* ── "Taras" skin (dark gold, inspired by taras.cloud) ── */
+[data-skin="taras"] {
+  --background: #26282b;
+  --foreground: rgba(255, 255, 255, 0.85);
+  --card: #2b2d30;
+  --card-foreground: rgba(255, 255, 255, 0.85);
+  --popover: #2b2d30;
+  --popover-foreground: rgba(255, 255, 255, 0.85);
+  --primary: #ffd600;
+  --primary-foreground: #1a1a1a;
+  --secondary: rgba(255, 214, 0, 0.08);
+  --secondary-foreground: rgba(255, 255, 255, 0.85);
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: rgba(255, 255, 255, 0.5);
+  --accent: rgba(255, 168, 0, 0.12);
+  --accent-foreground: #ffd600;
+  --destructive: #f87171;
+  --border: rgba(255, 168, 0, 0.15);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #ffc700;
+  --radius: 0.375rem;
+
+  --chart-1: #ffd600;
+  --chart-2: #34d399;
+  --chart-3: #60a5fa;
+  --chart-4: #c084fc;
+  --chart-5: #f87171;
+
+  --sidebar: #1e2023;
+  --sidebar-foreground: rgba(255, 255, 255, 0.85);
+  --sidebar-primary: #ffd600;
+  --sidebar-primary-foreground: #1a1a1a;
+  --sidebar-accent: rgba(255, 214, 0, 0.08);
+  --sidebar-accent-foreground: rgba(255, 255, 255, 0.85);
+  --sidebar-border: rgba(255, 168, 0, 0.12);
+  --sidebar-ring: #ffc700;
+
+  --income: #34d399;
+  --expense: #f87171;
+  --net-positive: #ffd600;
+  --net-negative: #fb923c;
+  --level-pos: #c084fc;
+  --protein: #60a5fa;
+  --fat: #fbbf24;
+  --carbs: #a78bfa;
+  --calories-ok: #34d399;
+  --calories-over: #f87171;
+  --weight: #60a5fa;
+  --steps: #ffd600;
+  --strength: #ff8a00;
+  --cycling: #34d399;
+  --hr: #60a5fa;
+  --neutral: #6b7280;
+  --mood: #ffc700;
+
+  /* Chart-specific semantic tokens (taras) */
+  --chart-income: #34d399;
+  --chart-expense: #f87171;
+  --chart-difference: #ffd600;
+  --chart-positive: #34d399;
+  --chart-negative: #f87171;
+  --chart-accent: #ffc700;
+  --chart-muted: #6b7280;
+  --chart-brush: #6b7280;
+  --chart-mood-positive: #34d399;
+  --chart-mood-negative: #f87171;
+  --chart-mood-neutral: #94a3b8;
+  --chart-mood-warning: #fb923c;
+  --chart-mood-reference: #64748b;
+  --chart-sleep-deep: #1e40af;
+  --chart-sleep-rem: #c084fc;
+  --chart-sleep-light: #60a5fa;
+  --chart-sleep-awake: #f87171;
+  --chart-sleep-score: #ffc700;
+  --chart-sleep-duration: #60a5fa;
+  --chart-sleep-need: #6b7280;
+  --chart-sleep-bedtime: #c084fc;
+  --chart-sleep-wake: #ff8a00;
+  --chart-hrv: #c084fc;
+  --chart-exercise-weight: #60a5fa;
+  --chart-exercise-1rm: #ff8a00;
+  --chart-exercise-volume: #60a5fa;
+  --chart-exercise-duration: #c084fc;
+  --chart-muscle-chest: #f87171;
+  --chart-muscle-back: #60a5fa;
+  --chart-muscle-shoulders: #ffc700;
+  --chart-muscle-biceps: #34d399;
+  --chart-muscle-triceps: #c084fc;
+  --chart-muscle-legs: #fb923c;
+  --chart-muscle-core: #f472b6;
+  --chart-muscle-other: #6b7280;
+  --chart-active-min: #ff8a00;
+  --chart-bmi: #c084fc;
+  --chart-body-fat: #ff8a00;
+  --chart-calories: #60a5fa;
+  --chart-calorie-target: #f87171;
+  --chart-ua-income: #60a5fa;
+  --chart-ua-tax: #34d399;
+  --chart-ua-esv: #ff8a00;
+  --chart-ua-vz: #c084fc;
+  --chart-es-neto: #34d399;
+  --chart-es-irpf: #f87171;
+  --chart-es-ss: #ff8a00;
+
+  --card-bg-start: rgba(255, 255, 255, 0.04);
+  --card-bg-end: rgba(255, 255, 255, 0.02);
+  --card-hover-border: rgba(255, 168, 0, 0.25);
+  --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --input-bg: rgba(0, 0, 0, 0.3);
+  --hover-overlay: rgba(255, 214, 0, 0.03);
+  --skeleton-base: #2b2d30;
+  --skeleton-shine: #3a3c40;
+  --scrollbar-track: #26282b;
+  --scrollbar-thumb: #4a4c50;
+
+  color-scheme: dark;
+}
+
+/* ── "Neon" skin (cyberpunk — electric cyan + magenta) ── */
+[data-skin="neon"] {
+  --background: #0a0a0f;
+  --foreground: rgba(224, 247, 250, 0.9);
+  --card: #12121a;
+  --card-foreground: rgba(224, 247, 250, 0.9);
+  --popover: #12121a;
+  --popover-foreground: rgba(224, 247, 250, 0.9);
+  --primary: #00e5ff;
+  --primary-foreground: #0a0a0f;
+  --secondary: rgba(0, 229, 255, 0.08);
+  --secondary-foreground: rgba(224, 247, 250, 0.9);
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: rgba(160, 200, 220, 0.6);
+  --accent: rgba(255, 0, 128, 0.12);
+  --accent-foreground: #ff0080;
+  --destructive: #ff2d55;
+  --border: rgba(0, 229, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.07);
+  --ring: #00e5ff;
+  --radius: 0.5rem;
+
+  --chart-1: #00e5ff;
+  --chart-2: #ff0080;
+  --chart-3: #39ff14;
+  --chart-4: #bf5af2;
+  --chart-5: #ff9500;
+
+  --sidebar: #08080d;
+  --sidebar-foreground: rgba(224, 247, 250, 0.9);
+  --sidebar-primary: #00e5ff;
+  --sidebar-primary-foreground: #0a0a0f;
+  --sidebar-accent: rgba(0, 229, 255, 0.08);
+  --sidebar-accent-foreground: rgba(224, 247, 250, 0.9);
+  --sidebar-border: rgba(0, 229, 255, 0.1);
+  --sidebar-ring: #00e5ff;
+
+  --income: #39ff14;
+  --expense: #ff2d55;
+  --net-positive: #00e5ff;
+  --net-negative: #ff9500;
+  --level-pos: #bf5af2;
+  --protein: #00e5ff;
+  --fat: #ff9500;
+  --carbs: #bf5af2;
+  --calories-ok: #39ff14;
+  --calories-over: #ff2d55;
+  --weight: #00e5ff;
+  --steps: #bf5af2;
+  --strength: #ff0080;
+  --cycling: #39ff14;
+  --hr: #ff2d55;
+  --neutral: #4a5568;
+  --mood: #bf5af2;
+
+  /* Chart-specific semantic tokens (neon) */
+  --chart-income: #39ff14;
+  --chart-expense: #ff2d55;
+  --chart-difference: #bf5af2;
+  --chart-positive: #39ff14;
+  --chart-negative: #ff2d55;
+  --chart-accent: #ff9500;
+  --chart-muted: #4a5568;
+  --chart-brush: #4a5568;
+  --chart-mood-positive: #39ff14;
+  --chart-mood-negative: #ff2d55;
+  --chart-mood-neutral: #718096;
+  --chart-mood-warning: #ff9500;
+  --chart-mood-reference: #4a5568;
+  --chart-sleep-deep: #1a1a5e;
+  --chart-sleep-rem: #bf5af2;
+  --chart-sleep-light: #00e5ff;
+  --chart-sleep-awake: #ff2d55;
+  --chart-sleep-score: #ff9500;
+  --chart-sleep-duration: #00e5ff;
+  --chart-sleep-need: #4a5568;
+  --chart-sleep-bedtime: #bf5af2;
+  --chart-sleep-wake: #ff9500;
+  --chart-hrv: #bf5af2;
+  --chart-exercise-weight: #00e5ff;
+  --chart-exercise-1rm: #ff9500;
+  --chart-exercise-volume: #00e5ff;
+  --chart-exercise-duration: #bf5af2;
+  --chart-muscle-chest: #ff2d55;
+  --chart-muscle-back: #00e5ff;
+  --chart-muscle-shoulders: #ff9500;
+  --chart-muscle-biceps: #39ff14;
+  --chart-muscle-triceps: #bf5af2;
+  --chart-muscle-legs: #ff9500;
+  --chart-muscle-core: #ff0080;
+  --chart-muscle-other: #4a5568;
+  --chart-active-min: #ff9500;
+  --chart-bmi: #bf5af2;
+  --chart-body-fat: #ff9500;
+  --chart-calories: #00e5ff;
+  --chart-calorie-target: #ff2d55;
+  --chart-ua-income: #00e5ff;
+  --chart-ua-tax: #39ff14;
+  --chart-ua-esv: #ff9500;
+  --chart-ua-vz: #bf5af2;
+  --chart-es-neto: #39ff14;
+  --chart-es-irpf: #ff2d55;
+  --chart-es-ss: #ff9500;
+
+  --card-bg-start: rgba(0, 229, 255, 0.03);
+  --card-bg-end: rgba(255, 0, 128, 0.02);
+  --card-hover-border: rgba(0, 229, 255, 0.3);
+  --card-hover-shadow: 0 0 20px rgba(0, 229, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --input-bg: rgba(0, 0, 0, 0.4);
+  --hover-overlay: rgba(0, 229, 255, 0.04);
+  --skeleton-base: #12121a;
+  --skeleton-shine: #1a1a2e;
+  --scrollbar-track: #0a0a0f;
+  --scrollbar-thumb: #1a2a3a;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply scroll-smooth font-sans;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+  }
+}
+
+/* ── Mobile optimizations ── */
+
+/* Prevent iOS zoom on input focus (font-size < 16px triggers zoom) */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Touch-friendly minimum sizes */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a[role="button"],
+  [role="tab"],
+  [role="menuitem"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Disable hover effects on touch devices */
+  .hover\:bg-accent\/50:hover {
+    background-color: inherit;
+  }
+
+  /* Disable hover transforms on touch devices */
+  .metric-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Safe area for devices with notch (iPhone X+) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Hide scrollbar for horizontal nav */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Horizontal scroll fade indicator */
+.scroll-fade {
+  position: relative;
+}
+.scroll-fade::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to right, transparent, var(--background));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+@media (max-width: 640px) {
+  .scroll-fade::after {
+    opacity: 1;
+  }
+}
+
+/* ── UX-8.5 Page transition animation ── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-page-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ── D2.1 Metric Card Styling ── */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.metric-card {
+  background: linear-gradient(to bottom right, var(--card-bg-start), var(--card-bg-end));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-hover-shadow);
+  border-color: var(--card-hover-border);
+}
+
+/* Staggered animation delay utility classes */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+
+/* ── D5.2 Focus ring ── */
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* ── D5.4 Selection color ── */
+
+::selection {
+  background-color: rgba(59, 130, 246, 0.25);
+  color: inherit;
+}
+
+::-moz-selection {
+  background-color: rgba(59, 130, 246, 0.25);
+  color: inherit;
+}
+
+/* ── UX-8.6 Sticky section headers ── */
+
+.sticky-section-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--card);
+  backdrop-filter: blur(8px);
+}
+
+/* ── D12 Chart tooltip on touch devices ── */
+.recharts-wrapper {
+  touch-action: pan-y;
+}
+
+/* Accessibility: respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

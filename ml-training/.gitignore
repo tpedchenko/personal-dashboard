@@ -1,0 +1,8 @@
+# Generated model files (39GB+)
+*.gguf
+fused-model/
+fused-model-hf/
+*.log
+training.log
+eval_results.json
+__pycache__/
