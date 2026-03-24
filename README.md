@@ -15,18 +15,35 @@ Open-source, self-hosted personal dashboard for finance, health, fitness, invest
 ### One-click Setup (recommended)
 
 ```bash
-docker run -p 3000:3000 -v pd-config:/output ghcr.io/tpedchenko/personal-dashboard:setup
+# 1. Clone the repo
+git clone https://github.com/tpedchenko/personal-dashboard.git
+cd personal-dashboard
+
+# 2. Build and run the Setup Wizard
+cd setup
+docker build -t pd-setup .
+docker run -p 3000:3000 -v $(pwd)/../:/output pd-setup
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — the Setup Wizard will guide you:
+Open [http://localhost:3000](http://localhost:3000) — the Setup Wizard will guide you through 6 steps:
 
 1. **Choose language** — English, Українська, Español
 2. **Select modules** — Finance, Health, Gym, AI Chat, and more
-3. **Configure integrations** — Garmin, bank sync, AI providers
+3. **Configure integrations** — Garmin, bank sync, AI providers (enter API keys in the web form)
 4. **Set up auth** — Google OAuth or Demo Mode
-5. **Deploy** — one click, everything starts automatically
+5. **Seed demo data** — optional, fills the app with sample data for quick start
+6. **Deploy** — generates `.env` and `docker-compose.yml`, then run:
 
-No manual `.env` editing required — the wizard generates everything from a web form.
+```bash
+# 3. After the wizard finishes, start the dashboard
+cd ..
+docker compose up -d
+```
+
+Open [http://localhost:3000](http://localhost:3000) — your Personal Dashboard is ready!
+
+> **No manual `.env` editing required** — the wizard generates everything from the web form.
+> Secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) are auto-generated.
 
 ### Manual Setup (for advanced users)
 
