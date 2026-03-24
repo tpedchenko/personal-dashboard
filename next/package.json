@@ -30,7 +30,7 @@
     "gost89": "^0.1.11",
     "ioredis": "^5.10.0",
     "jkurwa": "^1.21.2",
-    "lucide-react": "^0.577.0",
+    "lucide-react": "^1.0.1",
     "next": "^16.1.7",
     "next-auth": "^5.0.0-beta.30",
     "next-intl": "^4.8.3",
