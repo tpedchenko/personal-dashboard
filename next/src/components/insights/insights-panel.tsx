@@ -31,6 +31,7 @@ export function InsightsPanel({ page = "finance" }: Props) {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [insightId, setInsightId] = useState<number | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+  const [variant, setVariant] = useState<string>("default");
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [showPromptEditor, setShowPromptEditor] = useState(false);
@@ -52,6 +53,7 @@ export function InsightsPanel({ page = "finance" }: Props) {
       setInsights(data.insights);
       setInsightId(data.insightId);
       setGeneratedAt(data.generatedAt);
+      setVariant(data.variant || "default");
     } catch {
       // ignore
     } finally {
@@ -79,6 +81,7 @@ export function InsightsPanel({ page = "finance" }: Props) {
             setInsights(result.insights);
             setInsightId(result.insightId ?? null);
             setGeneratedAt(result.generatedAt);
+            setVariant(result.variant || "default");
           }
         }
       })
@@ -130,6 +133,7 @@ export function InsightsPanel({ page = "finance" }: Props) {
           {generatedAt && (
             <span className="text-[10px] text-muted-foreground mr-1">
               {new Date(generatedAt).toLocaleDateString()}
+              {variant === "custom" && <span className="ml-1 text-primary/70" title="A/B test: custom prompt variant">A/B</span>}
             </span>
           )}
           <Button
@@ -219,7 +223,7 @@ export function InsightsPanel({ page = "finance" }: Props) {
                 className={`h-7 w-7 p-0 ${feedbackReaction === "like" ? "text-green-500" : "text-muted-foreground opacity-50 hover:opacity-100"}`}
                 onClick={() => {
                   setFeedbackReaction("like");
-                  if (insightId) startFeedback(async () => { await submitInsightFeedback(insightId, page, activePeriod, "like"); });
+                  if (insightId) startFeedback(async () => { await submitInsightFeedback(insightId, page, activePeriod, "like", undefined, variant); });
                 }}
                 disabled={feedbackPending}
               >
@@ -257,7 +261,7 @@ export function InsightsPanel({ page = "finance" }: Props) {
               <Button size="sm" disabled={feedbackPending || !feedbackComment.trim()} onClick={() => {
                 setFeedbackReaction("dislike");
                 startFeedback(async () => {
-                  if (insightId) await submitInsightFeedback(insightId, page, activePeriod, "dislike", feedbackComment);
+                  if (insightId) await submitInsightFeedback(insightId, page, activePeriod, "dislike", feedbackComment, variant);
                   setShowFeedbackDialog(false);
                   setFeedbackComment("");
                 });

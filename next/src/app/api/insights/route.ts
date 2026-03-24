@@ -49,14 +49,14 @@ export async function GET(request: Request) {
   if (insight) {
     try {
       const insights = JSON.parse(insight.insightsJson);
-      return Response.json({ insights, insightId: insight.id, generatedAt: insight.createdAt, page, period: insight.period });
+      return Response.json({ insights, insightId: insight.id, generatedAt: insight.createdAt, page, period: insight.period, variant: insight.variant || "default" });
     } catch (e) {
       console.error("[api/insights] JSON parse error for page:", page, e);
-      return Response.json({ insights: [], generatedAt: insight.createdAt, page, period: insight.period });
+      return Response.json({ insights: [], generatedAt: insight.createdAt, page, period: insight.period, variant: insight.variant || "default" });
     }
   }
 
-  return Response.json({ insights: [], generatedAt: null, page, period });
+  return Response.json({ insights: [], generatedAt: null, page, period, variant: "default" });
 }
 
 export async function POST(request: Request) {
@@ -104,6 +104,7 @@ export async function POST(request: Request) {
       page,
       period: result.period,
       model: result.model,
+      variant: result.variant,
     });
   } catch (e) {
     return Response.json(

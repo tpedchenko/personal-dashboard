@@ -172,7 +172,7 @@ export async function getCategoryTypes(): Promise<Record<string, "EXPENSE" | "IN
   const user = await requireUser();
   const result = await prisma.transaction.groupBy({
     by: ["category", "type"],
-    where: { userId: user.id, category: { not: null }, NOT: { subType: "TRANSFER" } },
+    where: { userId: user.id, category: { not: null }, subType: { not: "TRANSFER" } },
     _count: { id: true },
   });
   const map: Record<string, Set<string>> = {};

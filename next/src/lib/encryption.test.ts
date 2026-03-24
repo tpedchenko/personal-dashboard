@@ -112,9 +112,9 @@ describe("encryption", () => {
     });
 
     it("encrypt throws in production without key", () => {
-      process.env.NODE_ENV = "production";
+      Object.defineProperty(process.env, "NODE_ENV", { value: "production", writable: true, configurable: true });
       expect(() => encrypt("secret")).toThrow("ENCRYPTION_KEY not set");
-      process.env.NODE_ENV = "test";
+      Object.defineProperty(process.env, "NODE_ENV", { value: "test", writable: true, configurable: true });
     });
 
     it("encrypt returns plaintext with invalid key length", () => {

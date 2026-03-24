@@ -39,18 +39,18 @@ export async function getMonthlyTrends(year: number): Promise<MonthlyTrend[]> {
     // Income grouped by month
     prisma.transaction.groupBy({
       by: ["date"],
-      where: { ...baseWhere, type: "INCOME", NOT: { subType: "TRANSFER" } },
+      where: { ...baseWhere, type: "INCOME", subType: { not: "TRANSFER" } },
       _sum: { amountEur: true },
     }),
     // Expenses grouped by month
     prisma.transaction.groupBy({
       by: ["date"],
-      where: { ...baseWhere, type: "EXPENSE", NOT: { subType: "TRANSFER" } },
+      where: { ...baseWhere, type: "EXPENSE", subType: { not: "TRANSFER" } },
       _sum: { amountEur: true },
     }),
     // Expenses grouped by category + month
     prisma.transaction.findMany({
-      where: { ...baseWhere, type: "EXPENSE", NOT: { subType: "TRANSFER" } },
+      where: { ...baseWhere, type: "EXPENSE", subType: { not: "TRANSFER" } },
       select: { date: true, category: true, amountEur: true },
     }),
     // Workouts — just need count per month

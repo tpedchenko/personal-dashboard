@@ -386,6 +386,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   GuestInvite: 'GuestInvite',
+  Passkey: 'Passkey',
   UserPreference: 'UserPreference',
   AuditLog: 'AuditLog',
   Secret: 'Secret',
@@ -453,7 +454,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "guestInvite" | "userPreference" | "auditLog" | "secret" | "telegramLink" | "telegramConnectCode" | "transaction" | "nbuRate" | "customAccount" | "categoryFavourite" | "customCategory" | "budget" | "budgetConfig" | "mandatoryCategory" | "recurringTransaction" | "savingsGoal" | "dailyLog" | "foodLog" | "shoppingItem" | "shoppingHistory" | "garminDaily" | "garminActivity" | "garminSleep" | "garminHeartRate" | "garminStaging" | "garminBodyComposition" | "withingsMeasurement" | "embedding" | "aiNote" | "aiContextSnapshot" | "aiInsight" | "insightFeedback" | "chatHistory" | "gymExercise" | "gymWorkout" | "gymWorkoutExercise" | "gymSet" | "gymProgram" | "gymProgramDay" | "gymProgramExercise" | "syncFailure" | "taxDeclaration" | "taxDeclarationItem" | "receipt" | "taxIncomeRecord" | "taxDeadline" | "taxDocument" | "taxSimulation" | "brokerPosition" | "brokerAccountSummary" | "brokerTransaction" | "tradingStrategy" | "portfolioSnapshot"
+    modelProps: "user" | "guestInvite" | "passkey" | "userPreference" | "auditLog" | "secret" | "telegramLink" | "telegramConnectCode" | "transaction" | "nbuRate" | "customAccount" | "categoryFavourite" | "customCategory" | "budget" | "budgetConfig" | "mandatoryCategory" | "recurringTransaction" | "savingsGoal" | "dailyLog" | "foodLog" | "shoppingItem" | "shoppingHistory" | "garminDaily" | "garminActivity" | "garminSleep" | "garminHeartRate" | "garminStaging" | "garminBodyComposition" | "withingsMeasurement" | "embedding" | "aiNote" | "aiContextSnapshot" | "aiInsight" | "insightFeedback" | "chatHistory" | "gymExercise" | "gymWorkout" | "gymWorkoutExercise" | "gymSet" | "gymProgram" | "gymProgramDay" | "gymProgramExercise" | "syncFailure" | "taxDeclaration" | "taxDeclarationItem" | "receipt" | "taxIncomeRecord" | "taxDeadline" | "taxDocument" | "taxSimulation" | "brokerPosition" | "brokerAccountSummary" | "brokerTransaction" | "tradingStrategy" | "portfolioSnapshot"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -602,6 +603,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.GuestInviteCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.GuestInviteCountAggregateOutputType> | number
+        }
+      }
+    }
+    Passkey: {
+      payload: Prisma.$PasskeyPayload<ExtArgs>
+      fields: Prisma.PasskeyFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PasskeyFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PasskeyFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>
+        }
+        findFirst: {
+          args: Prisma.PasskeyFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PasskeyFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>
+        }
+        findMany: {
+          args: Prisma.PasskeyFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>[]
+        }
+        create: {
+          args: Prisma.PasskeyCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>
+        }
+        createMany: {
+          args: Prisma.PasskeyCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PasskeyCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>[]
+        }
+        delete: {
+          args: Prisma.PasskeyDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>
+        }
+        update: {
+          args: Prisma.PasskeyUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>
+        }
+        deleteMany: {
+          args: Prisma.PasskeyDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PasskeyUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PasskeyUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>[]
+        }
+        upsert: {
+          args: Prisma.PasskeyUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PasskeyPayload>
+        }
+        aggregate: {
+          args: Prisma.PasskeyAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePasskey>
+        }
+        groupBy: {
+          args: Prisma.PasskeyGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PasskeyGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PasskeyCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PasskeyCountAggregateOutputType> | number
         }
       }
     }
@@ -4481,7 +4556,6 @@ export const UserScalarFieldEnum = {
   email: 'email',
   name: 'name',
   role: 'role',
-  passwordHash: 'passwordHash',
   createdAt: 'createdAt'
 } as const
 
@@ -4495,6 +4569,23 @@ export const GuestInviteScalarFieldEnum = {
 } as const
 
 export type GuestInviteScalarFieldEnum = (typeof GuestInviteScalarFieldEnum)[keyof typeof GuestInviteScalarFieldEnum]
+
+
+export const PasskeyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  credentialId: 'credentialId',
+  publicKey: 'publicKey',
+  counter: 'counter',
+  deviceType: 'deviceType',
+  backedUp: 'backedUp',
+  transports: 'transports',
+  friendlyName: 'friendlyName',
+  createdAt: 'createdAt',
+  lastUsedAt: 'lastUsedAt'
+} as const
+
+export type PasskeyScalarFieldEnum = (typeof PasskeyScalarFieldEnum)[keyof typeof PasskeyScalarFieldEnum]
 
 
 export const UserPreferenceScalarFieldEnum = {
@@ -4913,6 +5004,7 @@ export const AiInsightScalarFieldEnum = {
   page: 'page',
   date: 'date',
   period: 'period',
+  variant: 'variant',
   insightsJson: 'insightsJson',
   promptUsed: 'promptUsed',
   model: 'model',
@@ -4929,6 +5021,7 @@ export const InsightFeedbackScalarFieldEnum = {
   userId: 'userId',
   page: 'page',
   period: 'period',
+  variant: 'variant',
   reaction: 'reaction',
   comment: 'comment',
   processed: 'processed',
@@ -5347,6 +5440,41 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'Bytes'
+ */
+export type BytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes'>
+    
+
+
+/**
+ * Reference to a field of type 'Bytes[]'
+ */
+export type ListBytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt[]'
+ */
+export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -5357,13 +5485,6 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -5477,6 +5598,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   guestInvite?: Prisma.GuestInviteOmit
+  passkey?: Prisma.PasskeyOmit
   userPreference?: Prisma.UserPreferenceOmit
   auditLog?: Prisma.AuditLogOmit
   secret?: Prisma.SecretOmit

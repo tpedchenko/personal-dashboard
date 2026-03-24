@@ -4,6 +4,7 @@
     "subtitle": "Registration is by invitation only. Use Demo mode to explore the app.",
     "sign_in_google": "Sign in with Google",
     "sign_in_github": "Sign in with GitHub",
+    "sign_in_passkey": "Sign in with Passkey",
     "or": "or",
     "try_demo": "Try Demo",
     "try_demo_help": "Explore the app with sample data — no login required",
@@ -29,7 +30,16 @@
     "have_account": "Already have an account? Sign in",
     "no_account": "Don't have an account? Register",
     "error_invalid_credentials": "Invalid email or password",
-    "error_generic": "Something went wrong. Please try again."
+    "error_generic": "Something went wrong. Please try again.",
+    "magic_email_label": "Sign in with verification code",
+    "magic_send_code": "Send Verification Code",
+    "magic_code_sent": "A 6-digit code has been sent to {email}",
+    "magic_code_label": "Verification Code",
+    "magic_verify": "Verify & Sign In",
+    "magic_try_different_email": "Try a different email",
+    "magic_invalid_code": "Invalid or expired code. Please try again.",
+    "magic_too_many_attempts": "Too many attempts. Please wait an hour before trying again.",
+    "magic_not_authorized": "This email is not authorized. Registration is invite-only."
   },
   "nav": {
     "finance": "Finance",
@@ -847,6 +857,7 @@
     "gym_exercises_tab": "🏋️ Custom Exercises",
     "gym_coming_soon": "Gym settings coming soon",
     "guests_tab": "👥 Guest Access",
+    "security_tab": "🔐 Security",
     "ai_insights_tab": "🤖 AI Insights",
     "ai_insights_settings": "AI Insights",
     "ai_insights_loading": "Loading insights...",

@@ -4,6 +4,7 @@
     "subtitle": "El registro es solo por invitacion. Usa el modo Demo para explorar la app.",
     "sign_in_google": "Iniciar sesion con Google",
     "sign_in_github": "Iniciar sesion con GitHub",
+    "sign_in_passkey": "Iniciar sesion con Passkey",
     "or": "o",
     "try_demo": "Probar Demo",
     "try_demo_help": "Explora la app con datos de ejemplo, sin necesidad de iniciar sesion",
@@ -29,7 +30,16 @@
     "have_account": "Ya tienes cuenta? Iniciar sesion",
     "no_account": "No tienes cuenta? Registrate",
     "error_invalid_credentials": "Email o contrasena incorrectos",
-    "error_generic": "Algo salio mal. Intenta de nuevo."
+    "error_generic": "Algo salio mal. Intenta de nuevo.",
+    "magic_email_label": "Iniciar sesion con codigo de verificacion",
+    "magic_send_code": "Enviar codigo de verificacion",
+    "magic_code_sent": "Se ha enviado un codigo de 6 digitos a {email}",
+    "magic_code_label": "Codigo de verificacion",
+    "magic_verify": "Verificar e iniciar sesion",
+    "magic_try_different_email": "Probar con otro email",
+    "magic_invalid_code": "Codigo invalido o expirado. Intenta de nuevo.",
+    "magic_too_many_attempts": "Demasiados intentos. Espera una hora antes de intentar de nuevo.",
+    "magic_not_authorized": "Este email no esta autorizado. El registro es solo por invitacion."
   },
   "nav": {
     "finance": "Finanzas",
@@ -844,6 +854,7 @@
     "gym_exercises_tab": "🏋️ Ejercicios Personalizados",
     "gym_coming_soon": "Ajustes de gimnasio proximamente",
     "guests_tab": "👥 Acceso de Invitados",
+    "security_tab": "🔐 Seguridad",
     "ai_insights_tab": "🤖 AI Insights",
     "ai_insights_settings": "AI Insights",
     "ai_insights_loading": "Cargando insights...",

@@ -106,7 +106,7 @@ export async function getMandatoryCategorySpending(period: string) {
     where: {
       userId: user.id,
       type: "EXPENSE",
-      NOT: { subType: "TRANSFER" },
+      subType: { not: "TRANSFER" },
       OR: categoryFilter,
       date: { gte: toDateOnly(dateFrom), lte: toDateOnly(dateTo) },
     },
@@ -149,7 +149,7 @@ export async function calculateWeeklyBudget(mandatoryPeriod: string = "last_mont
         where: {
           userId: user.id,
           type: "INCOME",
-          NOT: { subType: "TRANSFER" },
+          subType: { not: "TRANSFER" },
           ...(config.limitType === "pct_current_income"
             ? { date: { gte: toDateOnly(firstOfMonth), lte: toDateOnly(today) } }
             : {}),
@@ -166,7 +166,7 @@ export async function calculateWeeklyBudget(mandatoryPeriod: string = "last_mont
       where: {
         userId: user.id,
         type: "EXPENSE",
-        NOT: { subType: "TRANSFER" },
+        subType: { not: "TRANSFER" },
         date: { gte: toDateOnly(firstOfMonth), lte: toDateOnly(today) },
       },
       _sum: { amountEur: true },
@@ -200,7 +200,7 @@ export async function calculateWeeklyBudget(mandatoryPeriod: string = "last_mont
       where: {
         userId: user.id,
         type: "EXPENSE",
-        NOT: { subType: "TRANSFER" },
+        subType: { not: "TRANSFER" },
         OR: mandCatFilter,
         date: { gte: toDateOnly(firstOfMonth), lte: toDateOnly(today) },
       },

@@ -11,6 +11,7 @@ type Props = {
   insightId: number;
   page: string;
   period: string;
+  variant?: string;
   initialReaction?: string | null;
 };
 
@@ -21,7 +22,7 @@ const SUGGESTIONS = [
   { en: "More actionable recommendations", ua: "Більше практичних рекомендацій", es: "Más recomendaciones prácticas" },
 ];
 
-export function InsightFeedbackButtons({ insightId, page, period, initialReaction }: Props) {
+export function InsightFeedbackButtons({ insightId, page, period, variant = "default", initialReaction }: Props) {
   const t = useTranslations("common");
   const [reaction, setReaction] = useState<string | null>(initialReaction ?? null);
   const [showDialog, setShowDialog] = useState(false);
@@ -31,7 +32,7 @@ export function InsightFeedbackButtons({ insightId, page, period, initialReactio
   function handleLike() {
     setReaction("like");
     startTransition(async () => {
-      await submitInsightFeedback(insightId, page, period, "like");
+      await submitInsightFeedback(insightId, page, period, "like", undefined, variant);
     });
   }
 
@@ -42,7 +43,7 @@ export function InsightFeedbackButtons({ insightId, page, period, initialReactio
   function submitDislike() {
     setReaction("dislike");
     startTransition(async () => {
-      await submitInsightFeedback(insightId, page, period, "dislike", comment);
+      await submitInsightFeedback(insightId, page, period, "dislike", comment, variant);
       setShowDialog(false);
       setComment("");
     });

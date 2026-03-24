@@ -39,7 +39,6 @@ export type UserMinAggregateOutputType = {
   email: string | null
   name: string | null
   role: string | null
-  passwordHash: string | null
   createdAt: Date | null
 }
 
@@ -48,7 +47,6 @@ export type UserMaxAggregateOutputType = {
   email: string | null
   name: string | null
   role: string | null
-  passwordHash: string | null
   createdAt: Date | null
 }
 
@@ -57,7 +55,6 @@ export type UserCountAggregateOutputType = {
   email: number
   name: number
   role: number
-  passwordHash: number
   createdAt: number
   _all: number
 }
@@ -76,7 +73,6 @@ export type UserMinAggregateInputType = {
   email?: true
   name?: true
   role?: true
-  passwordHash?: true
   createdAt?: true
 }
 
@@ -85,7 +81,6 @@ export type UserMaxAggregateInputType = {
   email?: true
   name?: true
   role?: true
-  passwordHash?: true
   createdAt?: true
 }
 
@@ -94,7 +89,6 @@ export type UserCountAggregateInputType = {
   email?: true
   name?: true
   role?: true
-  passwordHash?: true
   createdAt?: true
   _all?: true
 }
@@ -190,7 +184,6 @@ export type UserGroupByOutputType = {
   email: string
   name: string | null
   role: string
-  passwordHash: string | null
   createdAt: Date | null
   _count: UserCountAggregateOutputType | null
   _avg: UserAvgAggregateOutputType | null
@@ -222,8 +215,8 @@ export type UserWhereInput = {
   email?: Prisma.StringFilter<"User"> | string
   name?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
-  passwordHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  passkeys?: Prisma.PasskeyListRelationFilter
   preferences?: Prisma.UserPreferenceListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
   chatHistory?: Prisma.ChatHistoryListRelationFilter
@@ -237,8 +230,8 @@ export type UserOrderByWithRelationInput = {
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  passkeys?: Prisma.PasskeyOrderByRelationAggregateInput
   preferences?: Prisma.UserPreferenceOrderByRelationAggregateInput
   auditLogs?: Prisma.AuditLogOrderByRelationAggregateInput
   chatHistory?: Prisma.ChatHistoryOrderByRelationAggregateInput
@@ -255,8 +248,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   name?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
-  passwordHash?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  passkeys?: Prisma.PasskeyListRelationFilter
   preferences?: Prisma.UserPreferenceListRelationFilter
   auditLogs?: Prisma.AuditLogListRelationFilter
   chatHistory?: Prisma.ChatHistoryListRelationFilter
@@ -270,7 +263,6 @@ export type UserOrderByWithAggregationInput = {
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _avg?: Prisma.UserAvgOrderByAggregateInput
@@ -287,7 +279,6 @@ export type UserScalarWhereWithAggregatesInput = {
   email?: Prisma.StringWithAggregatesFilter<"User"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.StringWithAggregatesFilter<"User"> | string
-  passwordHash?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
 }
 
@@ -295,8 +286,8 @@ export type UserCreateInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryCreateNestedManyWithoutUserInput
@@ -310,8 +301,8 @@ export type UserUncheckedCreateInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -324,8 +315,8 @@ export type UserUpdateInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUpdateManyWithoutUserNestedInput
@@ -339,8 +330,8 @@ export type UserUncheckedUpdateInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -354,7 +345,6 @@ export type UserCreateManyInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
 }
 
@@ -362,7 +352,6 @@ export type UserUpdateManyMutationInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
@@ -371,7 +360,6 @@ export type UserUncheckedUpdateManyInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
@@ -380,7 +368,6 @@ export type UserCountOrderByAggregateInput = {
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -393,7 +380,6 @@ export type UserMaxOrderByAggregateInput = {
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -402,7 +388,6 @@ export type UserMinOrderByAggregateInput = {
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
-  passwordHash?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -438,6 +423,20 @@ export type IntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type UserCreateNestedOneWithoutPasskeysInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPasskeysInput, Prisma.UserUncheckedCreateWithoutPasskeysInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPasskeysInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPasskeysNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPasskeysInput, Prisma.UserUncheckedCreateWithoutPasskeysInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPasskeysInput
+  upsert?: Prisma.UserUpsertWithoutPasskeysInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPasskeysInput, Prisma.UserUpdateWithoutPasskeysInput>, Prisma.UserUncheckedUpdateWithoutPasskeysInput>
 }
 
 export type UserCreateNestedOneWithoutPreferencesInput = {
@@ -520,12 +519,82 @@ export type UserUpdateOneWithoutChatHistoryNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutChatHistoryInput, Prisma.UserUpdateWithoutChatHistoryInput>, Prisma.UserUncheckedUpdateWithoutChatHistoryInput>
 }
 
+export type UserCreateWithoutPasskeysInput = {
+  email: string
+  name?: string | null
+  role?: string
+  createdAt?: Date | string | null
+  preferences?: Prisma.UserPreferenceCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
+  chatHistory?: Prisma.ChatHistoryCreateNestedManyWithoutUserInput
+  telegramLinks?: Prisma.TelegramLinkCreateNestedManyWithoutUserInput
+  aiInsights?: Prisma.AiInsightCreateNestedManyWithoutUserInput
+  embeddings?: Prisma.EmbeddingCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPasskeysInput = {
+  id?: number
+  email: string
+  name?: string | null
+  role?: string
+  createdAt?: Date | string | null
+  preferences?: Prisma.UserPreferenceUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
+  chatHistory?: Prisma.ChatHistoryUncheckedCreateNestedManyWithoutUserInput
+  telegramLinks?: Prisma.TelegramLinkUncheckedCreateNestedManyWithoutUserInput
+  aiInsights?: Prisma.AiInsightUncheckedCreateNestedManyWithoutUserInput
+  embeddings?: Prisma.EmbeddingUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPasskeysInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPasskeysInput, Prisma.UserUncheckedCreateWithoutPasskeysInput>
+}
+
+export type UserUpsertWithoutPasskeysInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPasskeysInput, Prisma.UserUncheckedUpdateWithoutPasskeysInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPasskeysInput, Prisma.UserUncheckedCreateWithoutPasskeysInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPasskeysInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPasskeysInput, Prisma.UserUncheckedUpdateWithoutPasskeysInput>
+}
+
+export type UserUpdateWithoutPasskeysInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  preferences?: Prisma.UserPreferenceUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
+  chatHistory?: Prisma.ChatHistoryUpdateManyWithoutUserNestedInput
+  telegramLinks?: Prisma.TelegramLinkUpdateManyWithoutUserNestedInput
+  aiInsights?: Prisma.AiInsightUpdateManyWithoutUserNestedInput
+  embeddings?: Prisma.EmbeddingUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPasskeysInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  preferences?: Prisma.UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
+  chatHistory?: Prisma.ChatHistoryUncheckedUpdateManyWithoutUserNestedInput
+  telegramLinks?: Prisma.TelegramLinkUncheckedUpdateManyWithoutUserNestedInput
+  aiInsights?: Prisma.AiInsightUncheckedUpdateManyWithoutUserNestedInput
+  embeddings?: Prisma.EmbeddingUncheckedUpdateManyWithoutUserNestedInput
+}
+
 export type UserCreateWithoutPreferencesInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryCreateNestedManyWithoutUserInput
   telegramLinks?: Prisma.TelegramLinkCreateNestedManyWithoutUserInput
@@ -538,8 +607,8 @@ export type UserUncheckedCreateWithoutPreferencesInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryUncheckedCreateNestedManyWithoutUserInput
   telegramLinks?: Prisma.TelegramLinkUncheckedCreateNestedManyWithoutUserInput
@@ -567,8 +636,8 @@ export type UserUpdateWithoutPreferencesInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUpdateManyWithoutUserNestedInput
   telegramLinks?: Prisma.TelegramLinkUpdateManyWithoutUserNestedInput
@@ -581,8 +650,8 @@ export type UserUncheckedUpdateWithoutPreferencesInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUncheckedUpdateManyWithoutUserNestedInput
   telegramLinks?: Prisma.TelegramLinkUncheckedUpdateManyWithoutUserNestedInput
@@ -594,8 +663,8 @@ export type UserCreateWithoutAuditLogsInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryCreateNestedManyWithoutUserInput
   telegramLinks?: Prisma.TelegramLinkCreateNestedManyWithoutUserInput
@@ -608,8 +677,8 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryUncheckedCreateNestedManyWithoutUserInput
   telegramLinks?: Prisma.TelegramLinkUncheckedCreateNestedManyWithoutUserInput
@@ -637,8 +706,8 @@ export type UserUpdateWithoutAuditLogsInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUpdateManyWithoutUserNestedInput
   telegramLinks?: Prisma.TelegramLinkUpdateManyWithoutUserNestedInput
@@ -651,8 +720,8 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUncheckedUpdateManyWithoutUserNestedInput
   telegramLinks?: Prisma.TelegramLinkUncheckedUpdateManyWithoutUserNestedInput
@@ -664,8 +733,8 @@ export type UserCreateWithoutTelegramLinksInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryCreateNestedManyWithoutUserInput
@@ -678,8 +747,8 @@ export type UserUncheckedCreateWithoutTelegramLinksInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -707,8 +776,8 @@ export type UserUpdateWithoutTelegramLinksInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUpdateManyWithoutUserNestedInput
@@ -721,8 +790,8 @@ export type UserUncheckedUpdateWithoutTelegramLinksInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -734,8 +803,8 @@ export type UserCreateWithoutEmbeddingsInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryCreateNestedManyWithoutUserInput
@@ -748,8 +817,8 @@ export type UserUncheckedCreateWithoutEmbeddingsInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -777,8 +846,8 @@ export type UserUpdateWithoutEmbeddingsInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUpdateManyWithoutUserNestedInput
@@ -791,8 +860,8 @@ export type UserUncheckedUpdateWithoutEmbeddingsInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -804,8 +873,8 @@ export type UserCreateWithoutAiInsightsInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryCreateNestedManyWithoutUserInput
@@ -818,8 +887,8 @@ export type UserUncheckedCreateWithoutAiInsightsInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   chatHistory?: Prisma.ChatHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -847,8 +916,8 @@ export type UserUpdateWithoutAiInsightsInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUpdateManyWithoutUserNestedInput
@@ -861,8 +930,8 @@ export type UserUncheckedUpdateWithoutAiInsightsInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   chatHistory?: Prisma.ChatHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -874,8 +943,8 @@ export type UserCreateWithoutChatHistoryInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutUserInput
   telegramLinks?: Prisma.TelegramLinkCreateNestedManyWithoutUserInput
@@ -888,8 +957,8 @@ export type UserUncheckedCreateWithoutChatHistoryInput = {
   email: string
   name?: string | null
   role?: string
-  passwordHash?: string | null
   createdAt?: Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedCreateNestedManyWithoutUserInput
   preferences?: Prisma.UserPreferenceUncheckedCreateNestedManyWithoutUserInput
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutUserInput
   telegramLinks?: Prisma.TelegramLinkUncheckedCreateNestedManyWithoutUserInput
@@ -917,8 +986,8 @@ export type UserUpdateWithoutChatHistoryInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUpdateManyWithoutUserNestedInput
   telegramLinks?: Prisma.TelegramLinkUpdateManyWithoutUserNestedInput
@@ -931,8 +1000,8 @@ export type UserUncheckedUpdateWithoutChatHistoryInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
-  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passkeys?: Prisma.PasskeyUncheckedUpdateManyWithoutUserNestedInput
   preferences?: Prisma.UserPreferenceUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutUserNestedInput
   telegramLinks?: Prisma.TelegramLinkUncheckedUpdateManyWithoutUserNestedInput
@@ -946,6 +1015,7 @@ export type UserUncheckedUpdateWithoutChatHistoryInput = {
  */
 
 export type UserCountOutputType = {
+  passkeys: number
   preferences: number
   auditLogs: number
   chatHistory: number
@@ -955,6 +1025,7 @@ export type UserCountOutputType = {
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  passkeys?: boolean | UserCountOutputTypeCountPasskeysArgs
   preferences?: boolean | UserCountOutputTypeCountPreferencesArgs
   auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
   chatHistory?: boolean | UserCountOutputTypeCountChatHistoryArgs
@@ -971,6 +1042,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
    * Select specific fields to fetch from the UserCountOutputType
    */
   select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPasskeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PasskeyWhereInput
 }
 
 /**
@@ -1021,8 +1099,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   email?: boolean
   name?: boolean
   role?: boolean
-  passwordHash?: boolean
   createdAt?: boolean
+  passkeys?: boolean | Prisma.User$passkeysArgs<ExtArgs>
   preferences?: boolean | Prisma.User$preferencesArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   chatHistory?: boolean | Prisma.User$chatHistoryArgs<ExtArgs>
@@ -1037,7 +1115,6 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   email?: boolean
   name?: boolean
   role?: boolean
-  passwordHash?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -1046,7 +1123,6 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   email?: boolean
   name?: boolean
   role?: boolean
-  passwordHash?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -1055,12 +1131,12 @@ export type UserSelectScalar = {
   email?: boolean
   name?: boolean
   role?: boolean
-  passwordHash?: boolean
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "role" | "passwordHash" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "role" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  passkeys?: boolean | Prisma.User$passkeysArgs<ExtArgs>
   preferences?: boolean | Prisma.User$preferencesArgs<ExtArgs>
   auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
   chatHistory?: boolean | Prisma.User$chatHistoryArgs<ExtArgs>
@@ -1075,6 +1151,7 @@ export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
+    passkeys: Prisma.$PasskeyPayload<ExtArgs>[]
     preferences: Prisma.$UserPreferencePayload<ExtArgs>[]
     auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
     chatHistory: Prisma.$ChatHistoryPayload<ExtArgs>[]
@@ -1087,7 +1164,6 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     email: string
     name: string | null
     role: string
-    passwordHash: string | null
     createdAt: Date | null
   }, ExtArgs["result"]["user"]>
   composites: {}
@@ -1483,6 +1559,7 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  passkeys<T extends Prisma.User$passkeysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$passkeysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PasskeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   preferences<T extends Prisma.User$preferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$preferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   chatHistory<T extends Prisma.User$chatHistoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$chatHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChatHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1522,7 +1599,6 @@ export interface UserFieldRefs {
   readonly email: Prisma.FieldRef<"User", 'String'>
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'String'>
-  readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }
     
@@ -1914,6 +1990,30 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Limit how many Users to delete.
    */
   limit?: number
+}
+
+/**
+ * User.passkeys
+ */
+export type User$passkeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Passkey
+   */
+  select?: Prisma.PasskeySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Passkey
+   */
+  omit?: Prisma.PasskeyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PasskeyInclude<ExtArgs> | null
+  where?: Prisma.PasskeyWhereInput
+  orderBy?: Prisma.PasskeyOrderByWithRelationInput | Prisma.PasskeyOrderByWithRelationInput[]
+  cursor?: Prisma.PasskeyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PasskeyScalarFieldEnum | Prisma.PasskeyScalarFieldEnum[]
 }
 
 /**

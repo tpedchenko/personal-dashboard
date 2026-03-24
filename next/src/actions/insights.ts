@@ -23,6 +23,7 @@ export type PageInsights = {
   insights: Insight[];
   generatedAt: string | null;
   model: string;
+  variant: string;
 };
 
 import { periodKeyFromPreset, getDateRangesForPreset, DEFAULT_PROMPTS, resolvePrompt } from "@/lib/ai-insights-prompts";
@@ -104,9 +105,10 @@ export async function getPageInsights(page: string, periodPreset?: string): Prom
   const user = await requireUser();
   const period = periodKeyFromPreset(periodPreset);
 
-  // Try exact period match first
+  // Try exact period match first — get the most recently created (in case of A/B variants)
   let row = await prisma.aiInsight.findFirst({
     where: { userId: user.id, page, period },
+    orderBy: { createdAt: "desc" },
   });
 
   // Fallback: get latest for this page (backward compat with old rows that have period="")
@@ -118,7 +120,7 @@ export async function getPageInsights(page: string, periodPreset?: string): Prom
   }
 
   if (!row) {
-    return { page, period, insightId: null, insights: [], generatedAt: null, model: "none" };
+    return { page, period, insightId: null, insights: [], generatedAt: null, model: "none", variant: "default" };
   }
 
   return {
@@ -128,6 +130,7 @@ export async function getPageInsights(page: string, periodPreset?: string): Prom
     insights: parseInsightsJson(row.insightsJson, page),
     generatedAt: row.createdAt?.toISOString() ?? row.date,
     model: row.model,
+    variant: row.variant || "default",
   };
 }
 
@@ -146,7 +149,7 @@ export async function getAllInsightsSummary(): Promise<PageInsights[]> {
 
   return pages.map((page) => {
     const row = results.find((r) => r.page === page);
-    if (!row) return { page, period: "", insightId: null, insights: [], generatedAt: null, model: "none" };
+    if (!row) return { page, period: "", insightId: null, insights: [], generatedAt: null, model: "none", variant: "default" };
 
     return {
       page,
@@ -155,6 +158,7 @@ export async function getAllInsightsSummary(): Promise<PageInsights[]> {
       insights: parseInsightsJson(row.insightsJson, page),
       generatedAt: row.createdAt?.toISOString() ?? row.date,
       model: row.model,
+      variant: row.variant || "default",
     };
   });
 }
@@ -162,6 +166,7 @@ export async function getAllInsightsSummary(): Promise<PageInsights[]> {
 export type InsightRow = {
   page: string;
   period: string;
+  variant: string;
   date: string;
   insightsJson: string;
   promptUsed: string | null;
@@ -184,6 +189,7 @@ export async function getAllInsightsForSettings(): Promise<InsightRow[]> {
   return rows.map((row) => ({
     page: row.page,
     period: row.period,
+    variant: row.variant || "default",
     date: row.date,
     insightsJson: row.insightsJson,
     promptUsed: row.promptUsed,
@@ -393,38 +399,17 @@ async function getInsightContext(
 }
 
 /**
- * Shared core logic for generating AI insights.
- * Used by both the server action and the API route.
+ * Generate a single insight variant with a given prompt.
+ * Returns the raw text, model used, and generation time.
  */
-export async function generateInsightsCore(
+async function generateSingleVariant(
+  promptText: string,
   page: string,
-  periodPreset: string | undefined,
+  period: string,
   language: string,
+  context: string,
   userId: number,
-): Promise<{ insights: Insight[]; raw: string; period: string; promptUsed: string; model: string; insightId: number | null }> {
-  const period = periodKeyFromPreset(periodPreset);
-  const periodLabel = periodLabelForPreset(periodPreset);
-  const comparisonPeriod = comparisonPeriodForPreset(periodPreset);
-
-  // Resolve prompt: custom user prompt > DEFAULT_PROMPTS with placeholders > fallback
-  const customPrompt = await prisma.userPreference.findFirst({
-    where: { userId, key: `insight_prompt_${page}` },
-  });
-
-  let promptText: string;
-  if (customPrompt?.value) {
-    promptText = resolvePrompt(customPrompt.value, periodLabel, comparisonPeriod, language);
-  } else {
-    const template = DEFAULT_PROMPTS[page] || DEFAULT_PROMPTS.finance;
-    promptText = resolvePrompt(template, periodLabel, comparisonPeriod, language);
-  }
-
-  // Compute date ranges for period-aware context
-  const dateRanges = getDateRangesForPreset(periodPreset);
-
-  // Fetch period-specific context: data for BOTH current and comparison periods
-  const context = await getInsightContext(page, userId, dateRanges);
-
+): Promise<{ raw: string; modelUsed: string; generationMs: number }> {
   const systemContent = `You are an AI analyst for a personal dashboard. ${promptText}
 Period: ${period}
 Write a single concise paragraph (3-4 sentences) with specific numbers comparing current vs previous period.
@@ -434,7 +419,6 @@ Return ONLY the JSON array, no other text.`;
 
   const userContent = `ВАЖЛИВО: Відповідай ТІЛЬКИ ${language} мовою. НЕ використовуй англійську.\nPeriod: ${period}\nAnalyze this data:\n${context}`;
 
-  // Try cloud LLMs first, then fall back to Ollama
   const [geminiKey, groqKey] = await Promise.all([
     getSecretValue(userId, "gemini_api_key"),
     getSecretValue(userId, "groq_api_key"),
@@ -508,22 +492,28 @@ Return ONLY the JSON array, no other text.`;
     }
   }
 
-  const generationMs = Date.now() - startTime;
+  return { raw, modelUsed, generationMs: Date.now() - startTime };
+}
 
-  if (!raw) {
-    return { insights: [], raw: "", period, promptUsed: promptText, model: "none", insightId: null };
-  }
-
-  const jsonMatch = raw.match(/\[[\s\S]*\]/);
-  const insights: Insight[] = jsonMatch ? parseInsightsJson(jsonMatch[0], page) : [];
-
-  // Save to DB
+/**
+ * Save an insight variant to the database.
+ */
+async function saveInsightVariant(
+  userId: number,
+  page: string,
+  period: string,
+  variant: string,
+  insights: Insight[],
+  promptUsed: string,
+  modelUsed: string,
+  generationMs: number,
+): Promise<number> {
   const today = new Date().toISOString().slice(0, 10);
   const saved = await prisma.aiInsight.upsert({
-    where: { userId_page_period: { userId, page, period } },
+    where: { userId_page_period_variant: { userId, page, period, variant } },
     update: {
       insightsJson: JSON.stringify(insights),
-      promptUsed: promptText,
+      promptUsed,
       model: modelUsed,
       generationMs,
       date: today,
@@ -532,15 +522,94 @@ Return ONLY the JSON array, no other text.`;
       userId,
       page,
       period,
+      variant,
       date: today,
       insightsJson: JSON.stringify(insights),
-      promptUsed: promptText,
+      promptUsed,
       model: modelUsed,
       generationMs,
     },
   });
+  return saved.id;
+}
 
-  return { insights, raw, period, promptUsed: promptText, model: modelUsed, insightId: saved.id };
+/**
+ * Shared core logic for generating AI insights.
+ * Used by both the server action and the API route.
+ *
+ * A/B testing: when a custom prompt exists, generates BOTH default and custom
+ * variants, saves both to DB, and randomly picks one (50/50) to return.
+ */
+export async function generateInsightsCore(
+  page: string,
+  periodPreset: string | undefined,
+  language: string,
+  userId: number,
+): Promise<{ insights: Insight[]; raw: string; period: string; promptUsed: string; model: string; insightId: number | null; variant: string }> {
+  const period = periodKeyFromPreset(periodPreset);
+  const periodLabel = periodLabelForPreset(periodPreset);
+  const comparisonPeriod = comparisonPeriodForPreset(periodPreset);
+
+  // Check if user has a custom prompt for this page
+  const customPromptPref = await prisma.userPreference.findFirst({
+    where: { userId, key: `insight_prompt_${page}` },
+  });
+
+  const defaultTemplate = DEFAULT_PROMPTS[page] || DEFAULT_PROMPTS.finance;
+  const defaultPromptText = resolvePrompt(defaultTemplate, periodLabel, comparisonPeriod, language);
+
+  // Compute date ranges for period-aware context
+  const dateRanges = getDateRangesForPreset(periodPreset);
+  const context = await getInsightContext(page, userId, dateRanges);
+
+  const hasCustomPrompt = !!customPromptPref?.value && customPromptPref.value.trim() !== defaultTemplate.trim();
+
+  if (hasCustomPrompt) {
+    // A/B test: generate both variants in parallel
+    const customPromptText = resolvePrompt(customPromptPref!.value!, periodLabel, comparisonPeriod, language);
+
+    const [defaultResult, customResult] = await Promise.all([
+      generateSingleVariant(defaultPromptText, page, period, language, context, userId),
+      generateSingleVariant(customPromptText, page, period, language, context, userId),
+    ]);
+
+    // Parse both results
+    const defaultJsonMatch = defaultResult.raw.match(/\[[\s\S]*\]/);
+    const defaultInsights: Insight[] = defaultJsonMatch ? parseInsightsJson(defaultJsonMatch[0], page) : [];
+
+    const customJsonMatch = customResult.raw.match(/\[[\s\S]*\]/);
+    const customInsights: Insight[] = customJsonMatch ? parseInsightsJson(customJsonMatch[0], page) : [];
+
+    // Save both variants to DB
+    const [defaultId, customId] = await Promise.all([
+      saveInsightVariant(userId, page, period, "default", defaultInsights, defaultPromptText, defaultResult.modelUsed, defaultResult.generationMs),
+      saveInsightVariant(userId, page, period, "custom", customInsights, customPromptText, customResult.modelUsed, customResult.generationMs),
+    ]);
+
+    // Randomly pick one to show (50/50)
+    const showCustom = Math.random() < 0.5;
+    const chosen = showCustom
+      ? { insights: customInsights, raw: customResult.raw, promptUsed: customPromptText, model: customResult.modelUsed, insightId: customId, variant: "custom" as const }
+      : { insights: defaultInsights, raw: defaultResult.raw, promptUsed: defaultPromptText, model: defaultResult.modelUsed, insightId: defaultId, variant: "default" as const };
+
+    console.log(`[Insights A/B] page=${page} period=${period} chosen=${chosen.variant} (default: ${defaultInsights.length} insights, custom: ${customInsights.length} insights)`);
+
+    return { ...chosen, period };
+  }
+
+  // No custom prompt — generate with default only (no A/B test)
+  const result = await generateSingleVariant(defaultPromptText, page, period, language, context, userId);
+
+  if (!result.raw) {
+    return { insights: [], raw: "", period, promptUsed: defaultPromptText, model: "none", insightId: null, variant: "default" };
+  }
+
+  const jsonMatch = result.raw.match(/\[[\s\S]*\]/);
+  const insights: Insight[] = jsonMatch ? parseInsightsJson(jsonMatch[0], page) : [];
+
+  const insightId = await saveInsightVariant(userId, page, period, "default", insights, defaultPromptText, result.modelUsed, result.generationMs);
+
+  return { insights, raw: result.raw, period, promptUsed: defaultPromptText, model: result.modelUsed, insightId, variant: "default" };
 }
 
 /**
@@ -564,6 +633,7 @@ export async function generatePageInsightsAction(
     insights: result.insights,
     generatedAt: new Date().toISOString(),
     model: result.insights.length > 0 ? result.model : "error",
+    variant: result.variant,
   };
 }
 
@@ -575,8 +645,16 @@ export async function submitInsightFeedback(
   period: string,
   reaction: "like" | "dislike",
   comment?: string,
+  variant?: string,
 ): Promise<{ success: boolean }> {
   const user = await requireUser();
+
+  // Resolve variant from the insight if not provided
+  let resolvedVariant = variant || "default";
+  if (!variant) {
+    const insight = await prisma.aiInsight.findUnique({ where: { id: insightId }, select: { variant: true } });
+    if (insight) resolvedVariant = insight.variant || "default";
+  }
 
   // One feedback per user per insight — replace previous
   await prisma.insightFeedback.deleteMany({
@@ -589,6 +667,7 @@ export async function submitInsightFeedback(
       userId: user.id,
       page,
       period,
+      variant: resolvedVariant,
       reaction,
       comment: reaction === "dislike" ? (comment || null) : null,
       processed: false,
@@ -675,6 +754,71 @@ export async function getInsightFeedbackStats(): Promise<{
   }));
 
   return { pageStats, promptChanges };
+}
+
+// ── A/B Test Stats ──
+
+export type ABTestPageStats = {
+  page: string;
+  defaultLikes: number;
+  defaultDislikes: number;
+  defaultTotal: number;
+  defaultWinRate: number;
+  customLikes: number;
+  customDislikes: number;
+  customTotal: number;
+  customWinRate: number;
+  hasCustomPrompt: boolean;
+};
+
+export async function getABTestStats(): Promise<ABTestPageStats[]> {
+  const user = await requireUser();
+  const pages = ["finance", "investments", "my-day", "gym", "exercises", "list"];
+
+  const feedbacks = await prisma.insightFeedback.findMany({
+    where: { userId: user.id },
+    select: { page: true, variant: true, reaction: true },
+  });
+
+  // Check which pages have custom prompts
+  const customPromptKeys = pages.map((p) => `insight_prompt_${p}`);
+  const customPrefs = await prisma.userPreference.findMany({
+    where: { userId: user.id, key: { in: customPromptKeys } },
+    select: { key: true, value: true },
+  });
+  const customPromptPages = new Set(
+    customPrefs.filter((p) => p.value && p.value.trim().length > 0).map((p) => p.key.replace("insight_prompt_", ""))
+  );
+
+  const statsMap: Record<string, { dL: number; dD: number; cL: number; cD: number }> = {};
+  for (const fb of feedbacks) {
+    if (!statsMap[fb.page]) statsMap[fb.page] = { dL: 0, dD: 0, cL: 0, cD: 0 };
+    const s = statsMap[fb.page];
+    const isCustom = fb.variant === "custom";
+    if (fb.reaction === "like") {
+      if (isCustom) s.cL++; else s.dL++;
+    } else if (fb.reaction === "dislike") {
+      if (isCustom) s.cD++; else s.dD++;
+    }
+  }
+
+  return pages.map((page) => {
+    const s = statsMap[page] || { dL: 0, dD: 0, cL: 0, cD: 0 };
+    const defaultTotal = s.dL + s.dD;
+    const customTotal = s.cL + s.cD;
+    return {
+      page,
+      defaultLikes: s.dL,
+      defaultDislikes: s.dD,
+      defaultTotal,
+      defaultWinRate: defaultTotal > 0 ? Math.round((s.dL / defaultTotal) * 100) : 0,
+      customLikes: s.cL,
+      customDislikes: s.cD,
+      customTotal,
+      customWinRate: customTotal > 0 ? Math.round((s.cL / customTotal) * 100) : 0,
+      hasCustomPrompt: customPromptPages.has(page),
+    };
+  });
 }
 
 export async function resetInsightPrompt(page: string): Promise<void> {

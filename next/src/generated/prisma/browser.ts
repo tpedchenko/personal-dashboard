@@ -28,6 +28,11 @@ export type User = Prisma.UserModel
  */
 export type GuestInvite = Prisma.GuestInviteModel
 /**
+ * Model Passkey
+ * 
+ */
+export type Passkey = Prisma.PasskeyModel
+/**
  * Model UserPreference
  * 
  */

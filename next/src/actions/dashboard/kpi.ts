@@ -74,11 +74,11 @@ async function fetchKpiPeriodData(
     foodDayCount,
   ] = await Promise.all([
     prisma.transaction.aggregate({
-      where: { userId, date: { gte: toDateOnly(from), lte: toDateOnly(to) }, type: "INCOME", NOT: { subType: "TRANSFER" } },
+      where: { userId, date: { gte: toDateOnly(from), lte: toDateOnly(to) }, type: "INCOME", subType: { not: "TRANSFER" } },
       _sum: { amountEur: true },
     }),
     prisma.transaction.aggregate({
-      where: { userId, date: { gte: toDateOnly(from), lte: toDateOnly(to) }, type: "EXPENSE", NOT: { subType: "TRANSFER" } },
+      where: { userId, date: { gte: toDateOnly(from), lte: toDateOnly(to) }, type: "EXPENSE", subType: { not: "TRANSFER" } },
       _sum: { amountEur: true },
     }),
     prisma.garminDaily.aggregate({

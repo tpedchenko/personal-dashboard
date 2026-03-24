@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/GuestInvite'
+export type * from './models/Passkey'
 export type * from './models/UserPreference'
 export type * from './models/AuditLog'
 export type * from './models/Secret'

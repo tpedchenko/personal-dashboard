@@ -1,0 +1,98 @@
+# Personal Dashboard — Docker Compose (public / self-hosted)
+# Usage: cp next/.env.example .env  →  edit .env  →  docker compose up -d
+
+services:
+  # ---------- PostgreSQL ----------
+  pg:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pd
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: pd
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pd"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Redis ----------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-changeme}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Next.js App ----------
+  pd-app:
+    build:
+      context: ./next
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgresql://pd:${PG_PASSWORD}@pg:5432/pd
+        NEXT_PUBLIC_GITHUB_AUTH_ENABLED: ${NEXT_PUBLIC_GITHUB_AUTH_ENABLED:-}
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      DATABASE_URL: postgresql://pd:${PG_PASSWORD}@pg:5432/pd
+      DIRECT_DATABASE_URL: postgresql://pd:${PG_PASSWORD}@pg:5432/pd
+      AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3333}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434/v1}
+      FREQTRADE_URL: ${FREQTRADE_URL:-}
+      FREQTRADE_USER: ${FREQTRADE_USER:-}
+      FREQTRADE_PASS: ${FREQTRADE_PASS:-}
+      GITHUB_ID: ${GITHUB_ID:-}
+      GITHUB_SECRET: ${GITHUB_SECRET:-}
+      NEXT_PUBLIC_GITHUB_AUTH_ENABLED: ${NEXT_PUBLIC_GITHUB_AUTH_ENABLED:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      DEMO_SECRET: ${DEMO_SECRET:-}
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3333/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ---------- Ollama (optional — local AI) ----------
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    profiles:
+      - ai
+
+volumes:
+  pg_data:
+  redis_data:
+  ollama_data:

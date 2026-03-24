@@ -106,6 +106,7 @@ const groups: Group[] = [
     groupKey: "group_other",
     tabs: [
       { key: "guests_tab", href: "/settings/guests" },
+      { key: "security_tab", href: "/settings/security" },
       { key: "ai_insights_tab", href: "/settings/ai-insights" },
       { key: "backup_tab", href: "/settings/backup" },
       { key: "bug_report_tab", href: "/settings/bug-report" },

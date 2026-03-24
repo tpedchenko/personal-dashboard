@@ -122,7 +122,7 @@ export async function getMonthlyDeepDive(period: {
       userId: user.id,
       date: { gte: toDateOnly(from), lte: toDateOnly(to) },
       type: "EXPENSE",
-      NOT: { subType: "TRANSFER" },
+      subType: { not: "TRANSFER" },
     },
     select: { date: true, category: true, amountEur: true },
   });

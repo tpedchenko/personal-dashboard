@@ -44,6 +44,7 @@ export type AiInsightMinAggregateOutputType = {
   page: string | null
   date: string | null
   period: string | null
+  variant: string | null
   insightsJson: string | null
   promptUsed: string | null
   model: string | null
@@ -57,6 +58,7 @@ export type AiInsightMaxAggregateOutputType = {
   page: string | null
   date: string | null
   period: string | null
+  variant: string | null
   insightsJson: string | null
   promptUsed: string | null
   model: string | null
@@ -70,6 +72,7 @@ export type AiInsightCountAggregateOutputType = {
   page: number
   date: number
   period: number
+  variant: number
   insightsJson: number
   promptUsed: number
   model: number
@@ -97,6 +100,7 @@ export type AiInsightMinAggregateInputType = {
   page?: true
   date?: true
   period?: true
+  variant?: true
   insightsJson?: true
   promptUsed?: true
   model?: true
@@ -110,6 +114,7 @@ export type AiInsightMaxAggregateInputType = {
   page?: true
   date?: true
   period?: true
+  variant?: true
   insightsJson?: true
   promptUsed?: true
   model?: true
@@ -123,6 +128,7 @@ export type AiInsightCountAggregateInputType = {
   page?: true
   date?: true
   period?: true
+  variant?: true
   insightsJson?: true
   promptUsed?: true
   model?: true
@@ -223,6 +229,7 @@ export type AiInsightGroupByOutputType = {
   page: string
   date: string
   period: string
+  variant: string
   insightsJson: string
   promptUsed: string | null
   model: string
@@ -259,6 +266,7 @@ export type AiInsightWhereInput = {
   page?: Prisma.StringFilter<"AiInsight"> | string
   date?: Prisma.StringFilter<"AiInsight"> | string
   period?: Prisma.StringFilter<"AiInsight"> | string
+  variant?: Prisma.StringFilter<"AiInsight"> | string
   insightsJson?: Prisma.StringFilter<"AiInsight"> | string
   promptUsed?: Prisma.StringNullableFilter<"AiInsight"> | string | null
   model?: Prisma.StringFilter<"AiInsight"> | string
@@ -274,6 +282,7 @@ export type AiInsightOrderByWithRelationInput = {
   page?: Prisma.SortOrder
   date?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   insightsJson?: Prisma.SortOrder
   promptUsed?: Prisma.SortOrderInput | Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -285,7 +294,7 @@ export type AiInsightOrderByWithRelationInput = {
 
 export type AiInsightWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  userId_page_period?: Prisma.AiInsightUserIdPagePeriodCompoundUniqueInput
+  userId_page_period_variant?: Prisma.AiInsightUserIdPagePeriodVariantCompoundUniqueInput
   AND?: Prisma.AiInsightWhereInput | Prisma.AiInsightWhereInput[]
   OR?: Prisma.AiInsightWhereInput[]
   NOT?: Prisma.AiInsightWhereInput | Prisma.AiInsightWhereInput[]
@@ -293,6 +302,7 @@ export type AiInsightWhereUniqueInput = Prisma.AtLeast<{
   page?: Prisma.StringFilter<"AiInsight"> | string
   date?: Prisma.StringFilter<"AiInsight"> | string
   period?: Prisma.StringFilter<"AiInsight"> | string
+  variant?: Prisma.StringFilter<"AiInsight"> | string
   insightsJson?: Prisma.StringFilter<"AiInsight"> | string
   promptUsed?: Prisma.StringNullableFilter<"AiInsight"> | string | null
   model?: Prisma.StringFilter<"AiInsight"> | string
@@ -300,7 +310,7 @@ export type AiInsightWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeNullableFilter<"AiInsight"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   feedback?: Prisma.InsightFeedbackListRelationFilter
-}, "id" | "userId_page_period">
+}, "id" | "userId_page_period_variant">
 
 export type AiInsightOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -308,6 +318,7 @@ export type AiInsightOrderByWithAggregationInput = {
   page?: Prisma.SortOrder
   date?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   insightsJson?: Prisma.SortOrder
   promptUsed?: Prisma.SortOrderInput | Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -329,6 +340,7 @@ export type AiInsightScalarWhereWithAggregatesInput = {
   page?: Prisma.StringWithAggregatesFilter<"AiInsight"> | string
   date?: Prisma.StringWithAggregatesFilter<"AiInsight"> | string
   period?: Prisma.StringWithAggregatesFilter<"AiInsight"> | string
+  variant?: Prisma.StringWithAggregatesFilter<"AiInsight"> | string
   insightsJson?: Prisma.StringWithAggregatesFilter<"AiInsight"> | string
   promptUsed?: Prisma.StringNullableWithAggregatesFilter<"AiInsight"> | string | null
   model?: Prisma.StringWithAggregatesFilter<"AiInsight"> | string
@@ -340,6 +352,7 @@ export type AiInsightCreateInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -355,6 +368,7 @@ export type AiInsightUncheckedCreateInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -367,6 +381,7 @@ export type AiInsightUpdateInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -382,6 +397,7 @@ export type AiInsightUncheckedUpdateInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -396,6 +412,7 @@ export type AiInsightCreateManyInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -407,6 +424,7 @@ export type AiInsightUpdateManyMutationInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -420,6 +438,7 @@ export type AiInsightUncheckedUpdateManyInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -437,10 +456,11 @@ export type AiInsightOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type AiInsightUserIdPagePeriodCompoundUniqueInput = {
+export type AiInsightUserIdPagePeriodVariantCompoundUniqueInput = {
   userId: number
   page: string
   period: string
+  variant: string
 }
 
 export type AiInsightCountOrderByAggregateInput = {
@@ -449,6 +469,7 @@ export type AiInsightCountOrderByAggregateInput = {
   page?: Prisma.SortOrder
   date?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   insightsJson?: Prisma.SortOrder
   promptUsed?: Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -468,6 +489,7 @@ export type AiInsightMaxOrderByAggregateInput = {
   page?: Prisma.SortOrder
   date?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   insightsJson?: Prisma.SortOrder
   promptUsed?: Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -481,6 +503,7 @@ export type AiInsightMinOrderByAggregateInput = {
   page?: Prisma.SortOrder
   date?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   insightsJson?: Prisma.SortOrder
   promptUsed?: Prisma.SortOrder
   model?: Prisma.SortOrder
@@ -559,6 +582,7 @@ export type AiInsightCreateWithoutUserInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -572,6 +596,7 @@ export type AiInsightUncheckedCreateWithoutUserInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -615,6 +640,7 @@ export type AiInsightScalarWhereInput = {
   page?: Prisma.StringFilter<"AiInsight"> | string
   date?: Prisma.StringFilter<"AiInsight"> | string
   period?: Prisma.StringFilter<"AiInsight"> | string
+  variant?: Prisma.StringFilter<"AiInsight"> | string
   insightsJson?: Prisma.StringFilter<"AiInsight"> | string
   promptUsed?: Prisma.StringNullableFilter<"AiInsight"> | string | null
   model?: Prisma.StringFilter<"AiInsight"> | string
@@ -626,6 +652,7 @@ export type AiInsightCreateWithoutFeedbackInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -640,6 +667,7 @@ export type AiInsightUncheckedCreateWithoutFeedbackInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -667,6 +695,7 @@ export type AiInsightUpdateWithoutFeedbackInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -681,6 +710,7 @@ export type AiInsightUncheckedUpdateWithoutFeedbackInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -693,6 +723,7 @@ export type AiInsightCreateManyUserInput = {
   page: string
   date: string
   period?: string
+  variant?: string
   insightsJson: string
   promptUsed?: string | null
   model?: string
@@ -704,6 +735,7 @@ export type AiInsightUpdateWithoutUserInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -717,6 +749,7 @@ export type AiInsightUncheckedUpdateWithoutUserInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -730,6 +763,7 @@ export type AiInsightUncheckedUpdateManyWithoutUserInput = {
   page?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   insightsJson?: Prisma.StringFieldUpdateOperationsInput | string
   promptUsed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   model?: Prisma.StringFieldUpdateOperationsInput | string
@@ -774,6 +808,7 @@ export type AiInsightSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   page?: boolean
   date?: boolean
   period?: boolean
+  variant?: boolean
   insightsJson?: boolean
   promptUsed?: boolean
   model?: boolean
@@ -790,6 +825,7 @@ export type AiInsightSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   page?: boolean
   date?: boolean
   period?: boolean
+  variant?: boolean
   insightsJson?: boolean
   promptUsed?: boolean
   model?: boolean
@@ -804,6 +840,7 @@ export type AiInsightSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   page?: boolean
   date?: boolean
   period?: boolean
+  variant?: boolean
   insightsJson?: boolean
   promptUsed?: boolean
   model?: boolean
@@ -818,6 +855,7 @@ export type AiInsightSelectScalar = {
   page?: boolean
   date?: boolean
   period?: boolean
+  variant?: boolean
   insightsJson?: boolean
   promptUsed?: boolean
   model?: boolean
@@ -825,7 +863,7 @@ export type AiInsightSelectScalar = {
   createdAt?: boolean
 }
 
-export type AiInsightOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "page" | "date" | "period" | "insightsJson" | "promptUsed" | "model" | "generationMs" | "createdAt", ExtArgs["result"]["aiInsight"]>
+export type AiInsightOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "page" | "date" | "period" | "variant" | "insightsJson" | "promptUsed" | "model" | "generationMs" | "createdAt", ExtArgs["result"]["aiInsight"]>
 export type AiInsightInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   feedback?: boolean | Prisma.AiInsight$feedbackArgs<ExtArgs>
@@ -850,6 +888,7 @@ export type $AiInsightPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     page: string
     date: string
     period: string
+    variant: string
     insightsJson: string
     promptUsed: string | null
     model: string
@@ -1285,6 +1324,7 @@ export interface AiInsightFieldRefs {
   readonly page: Prisma.FieldRef<"AiInsight", 'String'>
   readonly date: Prisma.FieldRef<"AiInsight", 'String'>
   readonly period: Prisma.FieldRef<"AiInsight", 'String'>
+  readonly variant: Prisma.FieldRef<"AiInsight", 'String'>
   readonly insightsJson: Prisma.FieldRef<"AiInsight", 'String'>
   readonly promptUsed: Prisma.FieldRef<"AiInsight", 'String'>
   readonly model: Prisma.FieldRef<"AiInsight", 'String'>

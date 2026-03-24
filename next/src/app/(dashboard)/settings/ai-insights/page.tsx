@@ -19,6 +19,7 @@ import {
   ThumbsUpIcon,
   RotateCcwIcon,
   HistoryIcon,
+  FlaskConicalIcon,
 } from "lucide-react";
 import {
   getAllInsightsForSettings,
@@ -26,10 +27,12 @@ import {
   setInsightPrompt,
   resetInsightPrompt,
   getInsightFeedbackStats,
+  getABTestStats,
   type InsightRow,
   type Insight,
   type FeedbackPageStats,
   type PromptChange,
+  type ABTestPageStats,
 } from "@/actions/insights";
 import { DEFAULT_PROMPTS } from "@/lib/ai-insights-prompts";
 
@@ -110,6 +113,7 @@ export default function AiInsightsSettingsPage() {
   const [feedbackStats, setFeedbackStats] = useState<FeedbackPageStats[]>([]);
   const [promptChanges, setPromptChanges] = useState<PromptChange[]>([]);
   const [resettingPrompt, setResettingPrompt] = useState<string | null>(null);
+  const [abStats, setAbStats] = useState<ABTestPageStats[]>([]);
 
   useEffect(() => {
     loadData();
@@ -118,13 +122,15 @@ export default function AiInsightsSettingsPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [data, stats] = await Promise.all([
+      const [data, stats, ab] = await Promise.all([
         getAllInsightsForSettings(),
         getInsightFeedbackStats(),
+        getABTestStats(),
       ]);
       setRows(data);
       setFeedbackStats(stats.pageStats);
       setPromptChanges(stats.promptChanges);
+      setAbStats(ab);
     } catch {
       // ignore
     } finally {
@@ -240,6 +246,92 @@ export default function AiInsightsSettingsPage() {
                       </td>
                     </tr>
                   ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* A/B Test Comparison */}
+      {abStats.some((s) => s.hasCustomPrompt || s.defaultTotal + s.customTotal > 0) && (
+        <Card className="overflow-hidden">
+          <div className="flex items-center gap-2 p-4 border-b">
+            <FlaskConicalIcon className="size-4 text-primary" />
+            <span className="font-semibold text-sm">A/B Test — Default vs Custom Prompt</span>
+          </div>
+          <div className="p-4">
+            <p className="text-xs text-muted-foreground mb-3">
+              When a custom prompt is set, insights are generated with both default and custom prompts.
+              One is randomly shown (50/50). Feedback tracks which variant wins.
+            </p>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-muted-foreground text-left">
+                  <th className="pb-2 font-medium">{t("ai_insights_page")}</th>
+                  <th className="pb-2 font-medium text-center" colSpan={2}>Default</th>
+                  <th className="pb-2 font-medium text-center" colSpan={2}>Custom</th>
+                  <th className="pb-2 font-medium text-center">Winner</th>
+                </tr>
+                <tr className="text-muted-foreground/70 text-[10px]">
+                  <th></th>
+                  <th className="pb-1 text-center font-normal">Win %</th>
+                  <th className="pb-1 text-center font-normal">Votes</th>
+                  <th className="pb-1 text-center font-normal">Win %</th>
+                  <th className="pb-1 text-center font-normal">Votes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {abStats
+                  .filter((s) => s.hasCustomPrompt || s.defaultTotal + s.customTotal > 0)
+                  .map((stat) => {
+                    const totalVotes = stat.defaultTotal + stat.customTotal;
+                    let winner = "—";
+                    let winnerClass = "text-muted-foreground";
+                    if (totalVotes >= 3) {
+                      if (stat.defaultWinRate > stat.customWinRate) {
+                        winner = "Default";
+                        winnerClass = "text-blue-500 font-medium";
+                      } else if (stat.customWinRate > stat.defaultWinRate) {
+                        winner = "Custom";
+                        winnerClass = "text-green-500 font-medium";
+                      } else {
+                        winner = "Tied";
+                      }
+                    } else if (totalVotes > 0) {
+                      winner = "Too few";
+                      winnerClass = "text-muted-foreground/50";
+                    } else if (stat.hasCustomPrompt) {
+                      winner = "Pending";
+                      winnerClass = "text-muted-foreground/50";
+                    }
+
+                    return (
+                      <tr key={stat.page} className="border-t border-muted/30">
+                        <td className="py-1.5">
+                          {PAGE_LABELS[stat.page] || stat.page}
+                          {stat.hasCustomPrompt && (
+                            <span className="ml-1 text-[9px] text-primary/60" title="Custom prompt active">A/B</span>
+                          )}
+                        </td>
+                        <td className="py-1.5 text-center">
+                          {stat.defaultTotal > 0 ? `${stat.defaultWinRate}%` : "—"}
+                        </td>
+                        <td className="py-1.5 text-center text-muted-foreground">
+                          {stat.defaultTotal > 0 ? `${stat.defaultLikes}/${stat.defaultTotal}` : "—"}
+                        </td>
+                        <td className="py-1.5 text-center">
+                          {stat.customTotal > 0 ? `${stat.customWinRate}%` : "—"}
+                        </td>
+                        <td className="py-1.5 text-center text-muted-foreground">
+                          {stat.customTotal > 0 ? `${stat.customLikes}/${stat.customTotal}` : "—"}
+                        </td>
+                        <td className={`py-1.5 text-center ${winnerClass}`}>
+                          {winner}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
@@ -387,6 +479,7 @@ export default function AiInsightsSettingsPage() {
                             <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                               <span>
                                 {row.period} | {row.model}
+                                {row.variant === "custom" && <span className="ml-1 text-primary/70">A/B:custom</span>}
                               </span>
                               <span>
                                 {row.generatedAt

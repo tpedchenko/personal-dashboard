@@ -19,9 +19,9 @@ model User {
   email        String   @unique
   name         String?
   role         String   @default("owner")
-  passwordHash String?  @map("password_hash")
   createdAt    DateTime? @default(now()) @map("created_at")
 
+  passkeys      Passkey[]
   preferences   UserPreference[]
   auditLogs     AuditLog[]
   chatHistory   ChatHistory[]
@@ -38,6 +38,25 @@ model GuestInvite {
   createdAt DateTime? @default(now()) @map("created_at")
 
   @@map("guest_invites")
+}
+
+model Passkey {
+  id              String   @id @default(cuid())
+  userId          Int      @map("user_id")
+  credentialId    String   @unique @map("credential_id")
+  publicKey       Bytes    @map("public_key")
+  counter         BigInt   @default(0)
+  deviceType      String?  @map("device_type")
+  backedUp        Boolean  @default(false) @map("backed_up")
+  transports      String?  // comma-separated: usb,ble,nfc,internal
+  friendlyName    String?  @map("friendly_name")
+  createdAt       DateTime @default(now()) @map("created_at")
+  lastUsedAt      DateTime? @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("passkeys")
 }
 
 model UserPreference {
@@ -497,6 +516,7 @@ model AiInsight {
   page         String
   date         String
   period       String    @default("") // e.g. "2026-03-21", "2026-W12", "2026-03", "2026"
+  variant      String    @default("default") // "default" | "custom" — A/B test variant
   insightsJson String    @map("insights_json")
   promptUsed   String?   @map("prompt_used")
   model        String    @default("pd-assistant")
@@ -506,7 +526,7 @@ model AiInsight {
   user     User              @relation(fields: [userId], references: [id])
   feedback InsightFeedback[]
 
-  @@unique([userId, page, period])
+  @@unique([userId, page, period, variant])
   @@index([userId, date(sort: Desc)])
   @@map("ai_insights")
 }
@@ -517,6 +537,7 @@ model InsightFeedback {
   userId    Int      @map("user_id")
   page      String
   period    String
+  variant   String   @default("default") // "default" | "custom" — which A/B variant was shown
   reaction  String   // "like" | "dislike"
   comment   String?
   processed Boolean  @default(false)
@@ -526,6 +547,7 @@ model InsightFeedback {
 
   @@index([processed, reaction])
   @@index([userId, page])
+  @@index([userId, page, variant])
   @@map("insight_feedback")
 }
 
@@ -916,3 +938,4 @@ model PortfolioSnapshot {
   @@index([userId, date])
   @@map("portfolio_snapshots")
 }
+

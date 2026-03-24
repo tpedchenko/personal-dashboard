@@ -4,6 +4,7 @@
     "subtitle": "Реєстрація доступна лише за запрошенням. Скористайтесь Demo режимом для перегляду функціоналу.",
     "sign_in_google": "Увійти через Google",
     "sign_in_github": "Увійти через GitHub",
+    "sign_in_passkey": "Увійти через Passkey",
     "or": "або",
     "try_demo": "Спробувати демо",
     "try_demo_help": "Переглянути додаток із демо-даними — вхід не потрібен",
@@ -29,7 +30,16 @@
     "have_account": "Вже є акаунт? Увійти",
     "no_account": "Немає акаунту? Зареєструватись",
     "error_invalid_credentials": "Невірний email або пароль",
-    "error_generic": "Щось пішло не так. Спробуйте ще раз."
+    "error_generic": "Щось пішло не так. Спробуйте ще раз.",
+    "magic_email_label": "Увійти з кодом підтвердження",
+    "magic_send_code": "Надіслати код підтвердження",
+    "magic_code_sent": "6-значний код надіслано на {email}",
+    "magic_code_label": "Код підтвердження",
+    "magic_verify": "Підтвердити та увійти",
+    "magic_try_different_email": "Спробувати інший email",
+    "magic_invalid_code": "Невірний або прострочений код. Спробуйте ще раз.",
+    "magic_too_many_attempts": "Забагато спроб. Зачекайте годину перед повторною спробою.",
+    "magic_not_authorized": "Цей email не авторизований. Реєстрація лише за запрошенням."
   },
   "nav": {
     "finance": "Фінанси",
@@ -848,6 +858,7 @@
     "gym_exercises_tab": "🏋️ Власні вправи",
     "gym_coming_soon": "Налаштування залу скоро з'являться",
     "guests_tab": "👥 Гостьовий доступ",
+    "security_tab": "🔐 Безпека",
     "ai_insights_tab": "🤖 AI Insights",
     "ai_insights_settings": "AI Insights",
     "ai_insights_loading": "Завантаження інсайтів...",

@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 
 const oauthProviders = [
@@ -11,11 +10,11 @@ const oauthProviders = [
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     checks: ["pkce", "state"],
   }),
-  ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
+  ...((process.env.GITHUB_CLIENT_ID || process.env.GITHUB_ID) && (process.env.GITHUB_CLIENT_SECRET || process.env.GITHUB_SECRET)
     ? [
         GitHub({
-          clientId: process.env.GITHUB_ID,
-          clientSecret: process.env.GITHUB_SECRET,
+          clientId: (process.env.GITHUB_CLIENT_ID || process.env.GITHUB_ID)!,
+          clientSecret: (process.env.GITHUB_CLIENT_SECRET || process.env.GITHUB_SECRET)!,
         }),
       ]
     : []),
@@ -25,6 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   providers: [
     ...oauthProviders,
+    // Credentials provider used only for passkey authentication flow
     Credentials({
       name: "credentials",
       credentials: {
@@ -37,15 +37,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!email || !password) return null;
 
+        // Passkey flow: password starts with __magic_link__passkey_
+        if (!password.startsWith("__magic_link__")) return null;
+
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { email: email.toLowerCase().trim() },
         });
-
-        if (!user || !user.passwordHash) return null;
-
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-        if (!isValid) return null;
-
+        if (!user) return null;
         return {
           id: String(user.id),
           email: user.email,

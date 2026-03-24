@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   GuestInvite: 'GuestInvite',
+  Passkey: 'Passkey',
   UserPreference: 'UserPreference',
   AuditLog: 'AuditLog',
   Secret: 'Secret',
@@ -128,7 +129,6 @@ export const UserScalarFieldEnum = {
   email: 'email',
   name: 'name',
   role: 'role',
-  passwordHash: 'passwordHash',
   createdAt: 'createdAt'
 } as const
 
@@ -142,6 +142,23 @@ export const GuestInviteScalarFieldEnum = {
 } as const
 
 export type GuestInviteScalarFieldEnum = (typeof GuestInviteScalarFieldEnum)[keyof typeof GuestInviteScalarFieldEnum]
+
+
+export const PasskeyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  credentialId: 'credentialId',
+  publicKey: 'publicKey',
+  counter: 'counter',
+  deviceType: 'deviceType',
+  backedUp: 'backedUp',
+  transports: 'transports',
+  friendlyName: 'friendlyName',
+  createdAt: 'createdAt',
+  lastUsedAt: 'lastUsedAt'
+} as const
+
+export type PasskeyScalarFieldEnum = (typeof PasskeyScalarFieldEnum)[keyof typeof PasskeyScalarFieldEnum]
 
 
 export const UserPreferenceScalarFieldEnum = {
@@ -560,6 +577,7 @@ export const AiInsightScalarFieldEnum = {
   page: 'page',
   date: 'date',
   period: 'period',
+  variant: 'variant',
   insightsJson: 'insightsJson',
   promptUsed: 'promptUsed',
   model: 'model',
@@ -576,6 +594,7 @@ export const InsightFeedbackScalarFieldEnum = {
   userId: 'userId',
   page: 'page',
   period: 'period',
+  variant: 'variant',
   reaction: 'reaction',
   comment: 'comment',
   processed: 'processed',

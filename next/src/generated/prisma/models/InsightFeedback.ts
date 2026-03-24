@@ -44,6 +44,7 @@ export type InsightFeedbackMinAggregateOutputType = {
   userId: number | null
   page: string | null
   period: string | null
+  variant: string | null
   reaction: string | null
   comment: string | null
   processed: boolean | null
@@ -56,6 +57,7 @@ export type InsightFeedbackMaxAggregateOutputType = {
   userId: number | null
   page: string | null
   period: string | null
+  variant: string | null
   reaction: string | null
   comment: string | null
   processed: boolean | null
@@ -68,6 +70,7 @@ export type InsightFeedbackCountAggregateOutputType = {
   userId: number
   page: number
   period: number
+  variant: number
   reaction: number
   comment: number
   processed: number
@@ -94,6 +97,7 @@ export type InsightFeedbackMinAggregateInputType = {
   userId?: true
   page?: true
   period?: true
+  variant?: true
   reaction?: true
   comment?: true
   processed?: true
@@ -106,6 +110,7 @@ export type InsightFeedbackMaxAggregateInputType = {
   userId?: true
   page?: true
   period?: true
+  variant?: true
   reaction?: true
   comment?: true
   processed?: true
@@ -118,6 +123,7 @@ export type InsightFeedbackCountAggregateInputType = {
   userId?: true
   page?: true
   period?: true
+  variant?: true
   reaction?: true
   comment?: true
   processed?: true
@@ -217,6 +223,7 @@ export type InsightFeedbackGroupByOutputType = {
   userId: number
   page: string
   period: string
+  variant: string
   reaction: string
   comment: string | null
   processed: boolean
@@ -252,6 +259,7 @@ export type InsightFeedbackWhereInput = {
   userId?: Prisma.IntFilter<"InsightFeedback"> | number
   page?: Prisma.StringFilter<"InsightFeedback"> | string
   period?: Prisma.StringFilter<"InsightFeedback"> | string
+  variant?: Prisma.StringFilter<"InsightFeedback"> | string
   reaction?: Prisma.StringFilter<"InsightFeedback"> | string
   comment?: Prisma.StringNullableFilter<"InsightFeedback"> | string | null
   processed?: Prisma.BoolFilter<"InsightFeedback"> | boolean
@@ -265,6 +273,7 @@ export type InsightFeedbackOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   page?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   reaction?: Prisma.SortOrder
   comment?: Prisma.SortOrderInput | Prisma.SortOrder
   processed?: Prisma.SortOrder
@@ -281,6 +290,7 @@ export type InsightFeedbackWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.IntFilter<"InsightFeedback"> | number
   page?: Prisma.StringFilter<"InsightFeedback"> | string
   period?: Prisma.StringFilter<"InsightFeedback"> | string
+  variant?: Prisma.StringFilter<"InsightFeedback"> | string
   reaction?: Prisma.StringFilter<"InsightFeedback"> | string
   comment?: Prisma.StringNullableFilter<"InsightFeedback"> | string | null
   processed?: Prisma.BoolFilter<"InsightFeedback"> | boolean
@@ -294,6 +304,7 @@ export type InsightFeedbackOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   page?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   reaction?: Prisma.SortOrder
   comment?: Prisma.SortOrderInput | Prisma.SortOrder
   processed?: Prisma.SortOrder
@@ -314,6 +325,7 @@ export type InsightFeedbackScalarWhereWithAggregatesInput = {
   userId?: Prisma.IntWithAggregatesFilter<"InsightFeedback"> | number
   page?: Prisma.StringWithAggregatesFilter<"InsightFeedback"> | string
   period?: Prisma.StringWithAggregatesFilter<"InsightFeedback"> | string
+  variant?: Prisma.StringWithAggregatesFilter<"InsightFeedback"> | string
   reaction?: Prisma.StringWithAggregatesFilter<"InsightFeedback"> | string
   comment?: Prisma.StringNullableWithAggregatesFilter<"InsightFeedback"> | string | null
   processed?: Prisma.BoolWithAggregatesFilter<"InsightFeedback"> | boolean
@@ -324,6 +336,7 @@ export type InsightFeedbackCreateInput = {
   userId: number
   page: string
   period: string
+  variant?: string
   reaction: string
   comment?: string | null
   processed?: boolean
@@ -337,6 +350,7 @@ export type InsightFeedbackUncheckedCreateInput = {
   userId: number
   page: string
   period: string
+  variant?: string
   reaction: string
   comment?: string | null
   processed?: boolean
@@ -347,6 +361,7 @@ export type InsightFeedbackUpdateInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   page?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   reaction?: Prisma.StringFieldUpdateOperationsInput | string
   comment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -360,6 +375,7 @@ export type InsightFeedbackUncheckedUpdateInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   page?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   reaction?: Prisma.StringFieldUpdateOperationsInput | string
   comment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -372,6 +388,7 @@ export type InsightFeedbackCreateManyInput = {
   userId: number
   page: string
   period: string
+  variant?: string
   reaction: string
   comment?: string | null
   processed?: boolean
@@ -382,6 +399,7 @@ export type InsightFeedbackUpdateManyMutationInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   page?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   reaction?: Prisma.StringFieldUpdateOperationsInput | string
   comment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -394,6 +412,7 @@ export type InsightFeedbackUncheckedUpdateManyInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   page?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   reaction?: Prisma.StringFieldUpdateOperationsInput | string
   comment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -416,6 +435,7 @@ export type InsightFeedbackCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   page?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   reaction?: Prisma.SortOrder
   comment?: Prisma.SortOrder
   processed?: Prisma.SortOrder
@@ -434,6 +454,7 @@ export type InsightFeedbackMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   page?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   reaction?: Prisma.SortOrder
   comment?: Prisma.SortOrder
   processed?: Prisma.SortOrder
@@ -446,6 +467,7 @@ export type InsightFeedbackMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   page?: Prisma.SortOrder
   period?: Prisma.SortOrder
+  variant?: Prisma.SortOrder
   reaction?: Prisma.SortOrder
   comment?: Prisma.SortOrder
   processed?: Prisma.SortOrder
@@ -504,6 +526,7 @@ export type InsightFeedbackCreateWithoutInsightInput = {
   userId: number
   page: string
   period: string
+  variant?: string
   reaction: string
   comment?: string | null
   processed?: boolean
@@ -515,6 +538,7 @@ export type InsightFeedbackUncheckedCreateWithoutInsightInput = {
   userId: number
   page: string
   period: string
+  variant?: string
   reaction: string
   comment?: string | null
   processed?: boolean
@@ -556,6 +580,7 @@ export type InsightFeedbackScalarWhereInput = {
   userId?: Prisma.IntFilter<"InsightFeedback"> | number
   page?: Prisma.StringFilter<"InsightFeedback"> | string
   period?: Prisma.StringFilter<"InsightFeedback"> | string
+  variant?: Prisma.StringFilter<"InsightFeedback"> | string
   reaction?: Prisma.StringFilter<"InsightFeedback"> | string
   comment?: Prisma.StringNullableFilter<"InsightFeedback"> | string | null
   processed?: Prisma.BoolFilter<"InsightFeedback"> | boolean
@@ -567,6 +592,7 @@ export type InsightFeedbackCreateManyInsightInput = {
   userId: number
   page: string
   period: string
+  variant?: string
   reaction: string
   comment?: string | null
   processed?: boolean
@@ -577,6 +603,7 @@ export type InsightFeedbackUpdateWithoutInsightInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   page?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   reaction?: Prisma.StringFieldUpdateOperationsInput | string
   comment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -588,6 +615,7 @@ export type InsightFeedbackUncheckedUpdateWithoutInsightInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   page?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   reaction?: Prisma.StringFieldUpdateOperationsInput | string
   comment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -599,6 +627,7 @@ export type InsightFeedbackUncheckedUpdateManyWithoutInsightInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   page?: Prisma.StringFieldUpdateOperationsInput | string
   period?: Prisma.StringFieldUpdateOperationsInput | string
+  variant?: Prisma.StringFieldUpdateOperationsInput | string
   reaction?: Prisma.StringFieldUpdateOperationsInput | string
   comment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processed?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -613,6 +642,7 @@ export type InsightFeedbackSelect<ExtArgs extends runtime.Types.Extensions.Inter
   userId?: boolean
   page?: boolean
   period?: boolean
+  variant?: boolean
   reaction?: boolean
   comment?: boolean
   processed?: boolean
@@ -626,6 +656,7 @@ export type InsightFeedbackSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   userId?: boolean
   page?: boolean
   period?: boolean
+  variant?: boolean
   reaction?: boolean
   comment?: boolean
   processed?: boolean
@@ -639,6 +670,7 @@ export type InsightFeedbackSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   userId?: boolean
   page?: boolean
   period?: boolean
+  variant?: boolean
   reaction?: boolean
   comment?: boolean
   processed?: boolean
@@ -652,13 +684,14 @@ export type InsightFeedbackSelectScalar = {
   userId?: boolean
   page?: boolean
   period?: boolean
+  variant?: boolean
   reaction?: boolean
   comment?: boolean
   processed?: boolean
   createdAt?: boolean
 }
 
-export type InsightFeedbackOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "insightId" | "userId" | "page" | "period" | "reaction" | "comment" | "processed" | "createdAt", ExtArgs["result"]["insightFeedback"]>
+export type InsightFeedbackOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "insightId" | "userId" | "page" | "period" | "variant" | "reaction" | "comment" | "processed" | "createdAt", ExtArgs["result"]["insightFeedback"]>
 export type InsightFeedbackInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   insight?: boolean | Prisma.AiInsightDefaultArgs<ExtArgs>
 }
@@ -680,6 +713,7 @@ export type $InsightFeedbackPayload<ExtArgs extends runtime.Types.Extensions.Int
     userId: number
     page: string
     period: string
+    variant: string
     reaction: string
     comment: string | null
     processed: boolean
@@ -1113,6 +1147,7 @@ export interface InsightFeedbackFieldRefs {
   readonly userId: Prisma.FieldRef<"InsightFeedback", 'Int'>
   readonly page: Prisma.FieldRef<"InsightFeedback", 'String'>
   readonly period: Prisma.FieldRef<"InsightFeedback", 'String'>
+  readonly variant: Prisma.FieldRef<"InsightFeedback", 'String'>
   readonly reaction: Prisma.FieldRef<"InsightFeedback", 'String'>
   readonly comment: Prisma.FieldRef<"InsightFeedback", 'String'>
   readonly processed: Prisma.FieldRef<"InsightFeedback", 'Boolean'>

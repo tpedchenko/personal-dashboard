@@ -12,7 +12,7 @@ Open-source, self-hosted personal dashboard for finance, health, fitness, invest
 
 ## Quick Start
 
-### One-click Setup (recommended)
+### Setup Wizard (recommended)
 
 ```bash
 # 1. Clone the repo
@@ -22,53 +22,29 @@ cd personal-dashboard
 # 2. Build and run the Setup Wizard
 cd setup
 docker build -t pd-setup .
-docker run -p 3000:3000 -v $(pwd)/../:/output pd-setup
+docker run -p 3333:3333 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$(pwd)/..:/data" \
+  pd-setup
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — the Setup Wizard will guide you through 6 steps:
+Open [http://localhost:3333](http://localhost:3333) — the Setup Wizard will guide you through 6 steps:
 
 1. **Choose language** — English, Українська, Español
 2. **Select modules** — Finance, Health, Gym, AI Chat, and more
 3. **Configure integrations** — Garmin, bank sync, AI providers (enter API keys in the web form)
-4. **Set up auth** — Google OAuth or Demo Mode
+4. **Set up auth** — Google OAuth, GitHub OAuth, or Demo Mode
 5. **Seed demo data** — optional, fills the app with sample data for quick start
-6. **Deploy** — generates `.env` and `docker-compose.yml`, then run:
+6. **Deploy** — the wizard generates `.env` and `docker-compose.yml`, starts containers, runs migrations, and seeds data automatically
 
-```bash
-# 3. After the wizard finishes, start the dashboard
-cd ..
-docker compose up -d
-```
-
-Open [http://localhost:3000](http://localhost:3000) — your Personal Dashboard is ready!
+Open [http://localhost:3333](http://localhost:3333) — your Personal Dashboard is ready!
 
 > **No manual `.env` editing required** — the wizard generates everything from the web form.
 > Secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) are auto-generated.
 
-### Manual Setup (for advanced users)
-
-```bash
-git clone https://github.com/tarascloud/personal-dashboard.git
-cd personal-dashboard
-cp next/.env.example .env
-# Edit .env
-docker compose up -d
-```
-
-Open [http://localhost:3000](http://localhost:3000). The first sign-in becomes the owner.
+> **Note:** If you run the wizard without mounting the Docker socket, it will generate the config files and show manual deployment instructions instead.
 
 ### Local Development
-
-```bash
-cd next
-npm install
-cp .env.example .env
-# Edit .env
-
-npx prisma migrate deploy
-npx prisma generate
-npm run dev
-```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 
