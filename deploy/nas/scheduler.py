@@ -728,7 +728,7 @@ def job_weekly_ai_report():
     logger.info("Running: weekly_ai_report")
     try:
         from src.database import set_current_user
-        set_current_user("tpedchenko@gmail.com")
+        set_current_user(os.environ.get("OWNER_EMAIL", "admin@example.com"))
 
         from src.analytics import build_weekly_report_context
         from src.claude_ai import generate_telegram_report
@@ -756,7 +756,7 @@ def job_monthly_ai_report():
     try:
         from datetime import date, timedelta
         from src.database import set_current_user
-        set_current_user("tpedchenko@gmail.com")
+        set_current_user(os.environ.get("OWNER_EMAIL", "admin@example.com"))
 
         from src.analytics import build_monthly_report_context
         from src.claude_ai import generate_telegram_report
@@ -784,7 +784,7 @@ def job_generate_snapshots():
     try:
         from datetime import date, timedelta
         from src.database import set_current_user
-        set_current_user("tpedchenko@gmail.com")
+        set_current_user(os.environ.get("OWNER_EMAIL", "admin@example.com"))
 
         from src.analytics import build_weekly_snapshot, build_monthly_snapshot
         from src.database import upsert_snapshot

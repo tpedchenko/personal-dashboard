@@ -31,6 +31,20 @@ Open-source, self-hosted personal dashboard for finance, health, fitness, invest
 
 Garmin Connect, Monobank, bunq, Interactive Brokers, Trading 212, eToro, Freqtrade, Withings, Telegram Bot, Kraken, Binance, Cobee, DPS (UA Tax)
 
+## About
+
+Visit the [/about](https://pd.taras.cloud/about) page for a full visual overview of all modules with screenshots.
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+If you use this software to provide a service over a network, you must make the source code available to users of that service.
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.
+
 ## Quick Start
 
 ### Docker (recommended)
@@ -75,16 +89,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 | **Infra** | Docker (multi-stage), Node 22-alpine, Serwist (PWA) |
 | **Testing** | Playwright (E2E), Vitest (unit) |
 
-## About
 
-Visit the [/about](https://pd.taras.cloud/about) page for a full visual overview of all modules with screenshots.
-
-## License
-
-This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
-
-If you use this software to provide a service over a network, you must make the source code available to users of that service.
-
-## Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.

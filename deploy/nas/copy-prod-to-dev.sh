@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-NAS_HOST="terminal-user@192.168.1.129"
+NAS_HOST="${NAS_HOST:-terminal-user@your-nas-ip}"
 
 echo "=== Copying production DB to dev ==="
 
