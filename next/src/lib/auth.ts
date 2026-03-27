@@ -91,21 +91,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       });
 
       if (!dbUser) {
-        // Check guest invites
+        // Check free spots limit (max 10 users)
+        const MAX_FREE_USERS = 10;
+        const currentCount = await prisma.user.count({
+          where: { email: { not: "demo@example.com" } },
+        });
+        if (currentCount >= MAX_FREE_USERS) {
+          return false; // No free spots remaining
+        }
+
+        // Check if user has a guest invite (gets guest role)
         const invite = await prisma.guestInvite.findUnique({
           where: { email: user.email },
         });
-        if (invite) {
-          await prisma.user.create({
-            data: {
-              email: user.email,
-              name: user.name || user.email,
-              role: "guest",
-            },
-          });
-          return true;
-        }
-        return false;
+
+        // Open registration: create user with "user" role (or "guest" if invited)
+        await prisma.user.create({
+          data: {
+            email: user.email,
+            name: user.name || user.email,
+            role: invite ? "guest" : "user",
+          },
+        });
+        return true;
       }
 
       return true;

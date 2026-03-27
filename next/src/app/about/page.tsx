@@ -544,6 +544,33 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* ==================== PWA BANNER ==================== */}
+        <section className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl">
+            <div className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 sm:p-8">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFC700]/10">
+                <Smartphone className="h-6 w-6 text-[#FFC700]" />
+              </div>
+              <div>
+                <T
+                  as="h3"
+                  en="Works as a native app — no install needed"
+                  ua="Працює як нативний додаток — без встановлення"
+                  es="Funciona como app nativa — sin instalacion"
+                  className="mb-1 text-base font-semibold text-white sm:text-lg"
+                />
+                <T
+                  as="p"
+                  en="Add to your home screen on any phone or tablet. Offline-ready, fast, and always up to date."
+                  ua="Додай на головний екран телефону чи планшету. Працює офлайн, швидко та завжди актуально."
+                  es="Anade a la pantalla de inicio en cualquier telefono o tablet. Funciona offline, rapido y siempre actualizado."
+                  className="text-sm text-[#9a9ea6]"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ==================== SELF-HOSTED ==================== */}
         <section className="px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl">
