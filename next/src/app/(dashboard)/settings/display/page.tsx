@@ -165,7 +165,11 @@ export default function DisplayPage() {
         >
           <div className="flex items-center gap-2">
             <RadioGroupItem value="easy" />
-            <Label className="cursor-pointer">Easy</Label>
+            <Label className="cursor-pointer">Default</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="aurora" />
+            <Label className="cursor-pointer">Aurora</Label>
           </div>
           <div className="flex items-center gap-2">
             <RadioGroupItem value="taras" />
@@ -177,7 +181,7 @@ export default function DisplayPage() {
           </div>
         </RadioGroup>
         <p className="text-xs text-muted-foreground">
-          {skin === "taras" ? "Dark gold theme inspired by taras.cloud" : skin === "neon" ? "Cyberpunk neon — electric cyan & magenta" : "Default clean theme with light/dark modes"}
+          {skin === "aurora" ? "Warm violet theme with light/dark modes" : skin === "taras" ? "Dark gold theme inspired by taras.cloud" : skin === "neon" ? "Cyberpunk neon — electric cyan & magenta" : "Default clean theme with light/dark modes"}
         </p>
       </Card>
 

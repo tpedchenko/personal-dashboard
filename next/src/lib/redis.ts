@@ -5,7 +5,7 @@ const globalForRedis = globalThis as unknown as {
 };
 
 function createRedisClient(): Redis | null {
-  const host = process.env.REDIS_HOST || "pd-redis-prod";
+  const host = process.env.REDIS_HOST || "redis";
   const port = parseInt(process.env.REDIS_PORT || "6379", 10);
   const password = process.env.REDIS_PASSWORD;
 
