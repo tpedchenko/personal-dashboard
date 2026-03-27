@@ -113,13 +113,15 @@ export async function migrateAndDeleteAccount(id: number, migrateToAccountName: 
   const account = await prisma.customAccount.findUnique({ where: { id, userId: user.id } });
   if (!account) return;
 
-  if (migrateToAccountName) {
-    await prisma.transaction.updateMany({
-      where: { userId: user.id, account: account.name },
-      data: { account: migrateToAccountName },
-    });
-  }
-  await prisma.customAccount.delete({ where: { id, userId: user.id } });
+  await prisma.$transaction(async (tx) => {
+    if (migrateToAccountName) {
+      await tx.transaction.updateMany({
+        where: { userId: user.id, account: account.name },
+        data: { account: migrateToAccountName },
+      });
+    }
+    await tx.customAccount.delete({ where: { id, userId: user.id } });
+  });
 }
 
 export async function swapAccountOrder(id1: number, id2: number) {
@@ -129,7 +131,7 @@ export async function swapAccountOrder(id1: number, id2: number) {
     prisma.customAccount.findUnique({ where: { id: id2, userId: user.id } }),
   ]);
   if (!a1 || !a2) return;
-  await Promise.all([
+  await prisma.$transaction([
     prisma.customAccount.update({ where: { id: id1, userId: user.id }, data: { sortOrder: a2.sortOrder } }),
     prisma.customAccount.update({ where: { id: id2, userId: user.id }, data: { sortOrder: a1.sortOrder } }),
   ]);
@@ -476,6 +478,7 @@ export async function deleteUserAccount(): Promise<void> {
 
   // Delete all user data atomically
   await prisma.$transaction(async (tx) => {
+    // Gym
     await tx.gymSet.deleteMany({ where: { userId: id } });
     await tx.gymWorkoutExercise.deleteMany({ where: { userId: id } });
     await tx.gymWorkout.deleteMany({ where: { userId: id } });
@@ -483,10 +486,13 @@ export async function deleteUserAccount(): Promise<void> {
     await tx.gymProgramDay.deleteMany({ where: { userId: id } });
     await tx.gymProgram.deleteMany({ where: { userId: id } });
     await tx.gymExercise.deleteMany({ where: { userId: id } });
+    // Food & Shopping
     await tx.foodLog.deleteMany({ where: { userId: id } });
     await tx.shoppingItem.deleteMany({ where: { userId: id } });
     await tx.shoppingHistory.deleteMany({ where: { userId: id } });
+    // Daily logs
     await tx.dailyLog.deleteMany({ where: { userId: id } });
+    // Finance
     await tx.transaction.deleteMany({ where: { userId: id } });
     await tx.budget.deleteMany({ where: { userId: id } });
     await tx.recurringTransaction.deleteMany({ where: { userId: id } });
@@ -494,6 +500,34 @@ export async function deleteUserAccount(): Promise<void> {
     await tx.customAccount.deleteMany({ where: { userId: id } });
     await tx.customCategory.deleteMany({ where: { userId: id } });
     await tx.categoryFavourite.deleteMany({ where: { userId: id } });
+    await tx.mandatoryCategory.deleteMany({ where: { userId: id } });
+    // Garmin health data
+    await tx.garminDaily.deleteMany({ where: { userId: id } });
+    await tx.garminSleep.deleteMany({ where: { userId: id } });
+    await tx.garminActivity.deleteMany({ where: { userId: id } });
+    await tx.garminBodyComposition.deleteMany({ where: { userId: id } });
+    await tx.garminHeartRate.deleteMany({ where: { userId: id } });
+    await tx.garminStaging.deleteMany({ where: { userId: id } });
+    // Withings
+    await tx.withingsMeasurement.deleteMany({ where: { userId: id } });
+    // Investments & Broker
+    await tx.brokerPosition.deleteMany({ where: { userId: id } });
+    await tx.brokerAccountSummary.deleteMany({ where: { userId: id } });
+    await tx.brokerTransaction.deleteMany({ where: { userId: id } });
+    await tx.portfolioSnapshot.deleteMany({ where: { userId: id } });
+    // Tax
+    await tx.taxDeclaration.deleteMany({ where: { userId: id } });
+    await tx.taxDocument.deleteMany({ where: { userId: id } });
+    await tx.taxSimulation.deleteMany({ where: { userId: id } });
+    await tx.taxIncomeRecord.deleteMany({ where: { userId: id } });
+    await tx.taxDeadline.deleteMany({ where: { userId: id } });
+    // Trading
+    await tx.tradingStrategy.deleteMany({ where: { userId: id } });
+    // Sync & AI
+    await tx.syncFailure.deleteMany({ where: { userId: id } });
+    await tx.embedding.deleteMany({ where: { userId: id } });
+    await tx.aiInsight.deleteMany({ where: { userId: id } });
+    // Secrets & preferences
     await tx.secret.deleteMany({ where: { userId: id } });
     await tx.aiNote.deleteMany({ where: { userId: id } });
     await tx.aiContextSnapshot.deleteMany({ where: { userId: id } });
@@ -501,6 +535,7 @@ export async function deleteUserAccount(): Promise<void> {
     await tx.auditLog.deleteMany({ where: { userEmail: email } });
     await tx.userPreference.deleteMany({ where: { userId: id } });
     await tx.telegramLink.deleteMany({ where: { userEmail: email } });
+    // Finally delete the user
     await tx.user.delete({ where: { id } });
   });
 }

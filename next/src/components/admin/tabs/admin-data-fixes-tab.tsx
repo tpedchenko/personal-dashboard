@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getDataOverview, type DataOverview } from "@/actions/admin-data";
+import { getDataOverview, type DataOverview } from "@/actions/admin";
 
 type Props = {
   isPending: boolean;

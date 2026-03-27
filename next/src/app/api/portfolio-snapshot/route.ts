@@ -11,6 +11,7 @@ export async function POST() {
       await checkRateLimit(String(user.id), "/api/portfolio-snapshot");
     } catch (e) {
       if (e instanceof RateLimitError) return rateLimitResponse(e);
+      console.warn("[rate-limit] Unexpected error in /api/portfolio-snapshot, allowing request:", e);
     }
 
     const result = await savePortfolioSnapshot();

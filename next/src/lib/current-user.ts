@@ -57,6 +57,12 @@ export async function getCurrentUser() {
   return user;
 }
 
+/** Get current user ID without throwing. Returns null if not authenticated. */
+export async function getCurrentUserId(): Promise<number | null> {
+  const user = await getCurrentUser();
+  return user?.id ?? null;
+}
+
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { batchUpsertEmbeddings } from "@/lib/embeddings";
 import { dateToString } from "@/lib/date-utils";
 
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 100;
 
 export async function POST() {
   let user;
@@ -16,28 +16,28 @@ export async function POST() {
     return new Response("Forbidden", { status: 403 });
   }
 
-  const dailyLogs = await prisma.dailyLog.findMany({
-    where: {
-      userId: user.id,
-      generalNote: { not: "" },
-    },
-    select: { id: true, date: true, generalNote: true },
-  });
-
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      userId: user.id,
-      description: { not: "" },
-    },
-    select: { id: true, date: true, description: true, category: true, amountEur: true, type: true },
-  });
-
   let totalProcessed = 0;
   let totalSkipped = 0;
+  let totalDailyLogs = 0;
+  let totalTransactions = 0;
 
-  // Process daily logs in batches
-  for (let i = 0; i < dailyLogs.length; i += BATCH_SIZE) {
-    const batch = dailyLogs.slice(i, i + BATCH_SIZE);
+  // Process daily logs with cursor-based pagination
+  let dailyLogCursor: number | undefined;
+  while (true) {
+    const batch = await prisma.dailyLog.findMany({
+      where: {
+        userId: user.id,
+        generalNote: { not: "" },
+      },
+      select: { id: true, date: true, generalNote: true },
+      orderBy: { id: "asc" },
+      take: BATCH_SIZE,
+      ...(dailyLogCursor != null ? { skip: 1, cursor: { id: dailyLogCursor } } : {}),
+    });
+    if (batch.length === 0) break;
+    totalDailyLogs += batch.length;
+    dailyLogCursor = batch[batch.length - 1].id;
+
     const records = batch
       .filter((log) => log.generalNote)
       .map((log) => ({
@@ -50,9 +50,23 @@ export async function POST() {
     totalSkipped += result.skipped;
   }
 
-  // Process transactions in batches
-  for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
-    const batch = transactions.slice(i, i + BATCH_SIZE);
+  // Process transactions with cursor-based pagination
+  let txCursor: number | undefined;
+  while (true) {
+    const batch = await prisma.transaction.findMany({
+      where: {
+        userId: user.id,
+        description: { not: "" },
+      },
+      select: { id: true, date: true, description: true, category: true, amountEur: true, type: true },
+      orderBy: { id: "asc" },
+      take: BATCH_SIZE,
+      ...(txCursor != null ? { skip: 1, cursor: { id: txCursor } } : {}),
+    });
+    if (batch.length === 0) break;
+    totalTransactions += batch.length;
+    txCursor = batch[batch.length - 1].id;
+
     const records = batch
       .filter((tx) => tx.description)
       .map((tx) => ({
@@ -66,8 +80,8 @@ export async function POST() {
   }
 
   return Response.json({
-    dailyLogs: dailyLogs.length,
-    transactions: transactions.length,
+    dailyLogs: totalDailyLogs,
+    transactions: totalTransactions,
     processed: totalProcessed,
     skipped: totalSkipped,
   });

@@ -21,6 +21,7 @@ export async function POST() {
       await checkRateLimit(String(user.id), "/api/sync/investments");
     } catch (e) {
       if (e instanceof RateLimitError) return rateLimitResponse(e);
+      console.warn("[rate-limit] Unexpected error in /api/sync/investments, allowing request:", e);
     }
 
     const results = await Promise.allSettled([

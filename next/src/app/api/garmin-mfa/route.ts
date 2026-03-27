@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       await checkRateLimit(`ip:${ip}`, "/api/garmin-mfa");
     } catch (e) {
       if (e instanceof RateLimitError) return rateLimitResponse(e);
+      console.warn("[rate-limit] Unexpected error in /api/garmin-mfa, allowing request:", e);
     }
 
     const body = await request.json();
@@ -54,8 +55,22 @@ export async function POST(request: Request) {
     let targetUserId: number | null = null;
 
     if (body.userId && typeof body.userId === "number") {
-      // Explicit userId from Email Worker (if it tracks which user triggered MFA)
-      targetUserId = body.userId;
+      // Explicit userId from Email Worker — verify user exists AND has pending MFA
+      const verified = await prisma.userPreference.findFirst({
+        where: {
+          userId: body.userId,
+          key: "garmin_mfa_status",
+          value: "required",
+        },
+        select: { userId: true },
+      });
+      if (!verified) {
+        return NextResponse.json(
+          { error: "Invalid userId or user is not waiting for MFA" },
+          { status: 403 }
+        );
+      }
+      targetUserId = verified.userId;
     } else {
       // Find user with garmin_mfa_status = "required" (waiting for MFA code)
       const pendingUser = await prisma.userPreference.findFirst({

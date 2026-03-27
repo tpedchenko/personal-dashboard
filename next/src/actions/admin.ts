@@ -116,14 +116,16 @@ export async function getTelegramLinks() {
 
 export async function unlinkTelegram(telegramId: number) {
   const owner = await requireOwner();
-  await prisma.telegramLink.delete({ where: { telegramId } });
-  await prisma.auditLog.create({
-    data: {
-      userEmail: owner.email,
-      action: "unlink_telegram",
-      details: `Unlinked telegram_id ${telegramId}`,
-    },
-  });
+  await prisma.$transaction([
+    prisma.telegramLink.delete({ where: { telegramId } }),
+    prisma.auditLog.create({
+      data: {
+        userEmail: owner.email,
+        action: "unlink_telegram",
+        details: `Unlinked telegram_id ${telegramId}`,
+      },
+    }),
+  ]);
 }
 
 import { dateToString } from "@/lib/date-utils";

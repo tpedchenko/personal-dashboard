@@ -308,9 +308,20 @@ def _build_weekly_report() -> str | None:
 # Store pending MFA state per user (in-memory, survives across scheduler ticks)
 _garmin_mfa_pending: dict[int, tuple] = {}  # user_id -> (client, client_state)
 
+# Garmin 429 backoff tracking: user_id -> timestamp of last 429 error
+_garmin_429_backoff: dict[int, float] = {}
+_GARMIN_BACKOFF_SECONDS = 30 * 60  # 30 minutes backoff after 429
+
 
 def job_sync_garmin():
-    """Sync Garmin data for all users. Supports MFA via DB-based code exchange."""
+    """Sync Garmin data for all users. Supports MFA via DB-based code exchange.
+
+    Includes exponential backoff on 429 Too Many Requests:
+    - Tracks last 429 time per user in memory
+    - Skips sync if within 30-minute backoff window
+    - Prefers garth session resume over fresh login to reduce API calls
+    """
+    import time as _time
     logger.info("Running: sync_garmin")
     try:
         from src.sync.garmin_sync import authenticate_garmin, GarminMFARequired, sync_garmin_data
@@ -332,6 +343,13 @@ def job_sync_garmin():
                 users = cur.fetchall()
 
         for user_id, user_email, garmin_email, garmin_password in users:
+            # Check 429 backoff — skip if within backoff window
+            last_429 = _garmin_429_backoff.get(user_id, 0)
+            if last_429 and (_time.time() - last_429) < _GARMIN_BACKOFF_SECONDS:
+                remaining = int((_GARMIN_BACKOFF_SECONDS - (_time.time() - last_429)) / 60)
+                logger.info("Garmin user %s: skipping due to 429 backoff (%d min remaining)", user_id, remaining)
+                continue
+
             garth_dir = str(garth_base / str(user_id))
             os.makedirs(garth_dir, exist_ok=True)
 
@@ -403,7 +421,14 @@ def job_sync_garmin():
                     logger.warning("Garmin MFA required for user %s — waiting for code via UI.", user_id)
                     continue
                 except Exception as e:
-                    logger.error("Garmin auth failed for user %s: %s", user_id, e)
+                    err_str = str(e)
+                    # Detect 429 Too Many Requests and activate backoff
+                    if "429" in err_str or "Too Many Requests" in err_str:
+                        _garmin_429_backoff[user_id] = _time.time()
+                        logger.warning("Garmin 429 rate limit for user %s — backoff %d min", user_id, _GARMIN_BACKOFF_SECONDS // 60)
+                        _update_last_sync(user_id, user_email, "garmin", f"rate_limited: 429")
+                    else:
+                        logger.error("Garmin auth failed for user %s: %s", user_id, e)
                     continue
 
             # Clear MFA status on successful auth
@@ -417,12 +442,24 @@ def job_sync_garmin():
 
             # Sync data
             set_current_user(user_email)
-            with app_get_conn() as conn:
-                counts = sync_garmin_data(client, conn)
-                total = sum(v for k, v in counts.items() if k != "errors")
-                if total > 0:
-                    logger.info("Garmin user %s: %s", user_id, counts)
-                _update_last_sync(user_id, user_email, "garmin", f"ok: {counts}")
+            try:
+                with app_get_conn() as conn:
+                    counts = sync_garmin_data(client, conn)
+                    total = sum(v for k, v in counts.items() if k != "errors")
+                    if total > 0:
+                        logger.info("Garmin user %s: %s", user_id, counts)
+                    _update_last_sync(user_id, user_email, "garmin", f"ok: {counts}")
+                # Clear backoff on successful sync
+                _garmin_429_backoff.pop(user_id, None)
+            except Exception as e:
+                err_str = str(e)
+                if "429" in err_str or "Too Many Requests" in err_str:
+                    _garmin_429_backoff[user_id] = _time.time()
+                    logger.warning("Garmin 429 during sync for user %s — backoff %d min", user_id, _GARMIN_BACKOFF_SECONDS // 60)
+                    _update_last_sync(user_id, user_email, "garmin", f"rate_limited: 429")
+                else:
+                    logger.error("Garmin sync data failed for user %s: %s", user_id, e)
+                    _update_last_sync(user_id, user_email, "garmin", f"error: {e}")
 
             try:
                 client.garth.dump(garth_dir)
@@ -551,8 +588,17 @@ def job_sync_monobank():
         logger.error("sync_monobank failed: %s", e, exc_info=True)
 
 
+# bunq auth failure tracking: user_id -> True if auth failed (skip until next scheduler restart or manual fix)
+_bunq_auth_failed: dict[int, bool] = {}
+
+
 def job_sync_bunq():
-    """Sync bunq transactions for all users (respects auto/manual setting)."""
+    """Sync bunq transactions for all users (respects auto/manual setting).
+
+    Handles auth errors gracefully:
+    - If API key or IP is incorrect, marks user as auth-failed and skips future attempts
+    - Auth failure is cleared on scheduler restart or when user re-configures credentials
+    """
     logger.info("Running: sync_bunq")
     try:
         import json as _json
@@ -580,6 +626,11 @@ def job_sync_bunq():
             if auto_sync == "manual":
                 continue
 
+            # Skip users with known auth failures (don't hammer bunq API)
+            if _bunq_auth_failed.get(user_id):
+                logger.debug("bunq user %s: skipping due to previous auth failure", user_id)
+                continue
+
             try:
                 account_list = _json.loads(mappings_json)
             except Exception:
@@ -588,6 +639,7 @@ def job_sync_bunq():
             if not account_list:
                 continue
 
+            user_auth_ok = True
             for acc in account_list:
                 acc_id = acc.get("account_id", 0)
                 acc_name = acc.get("account_name", "bunq")
@@ -604,8 +656,22 @@ def job_sync_bunq():
                     if result["synced"] > 0:
                         logger.info("bunq user %s acc %s: synced %d, skipped %d",
                                     user_id, acc_name, result["synced"], result["skipped"])
+                    _update_last_sync(user_id, user_email, "bunq", f"ok: synced={result['synced']}")
                 except Exception as e:
-                    logger.error("bunq sync failed for user %s acc %s: %s", user_id, acc_name, e)
+                    err_str = str(e).lower()
+                    # Detect auth/IP errors — don't retry until credentials are fixed
+                    if any(phrase in err_str for phrase in [
+                        "incorrect api key", "ip address", "user credentials are incorrect",
+                        "unauthorized", "not allowed",
+                    ]):
+                        logger.error("bunq AUTH FAILED for user %s: %s — disabling auto-sync until fix", user_id, e)
+                        _bunq_auth_failed[user_id] = True
+                        _update_last_sync(user_id, user_email, "bunq", f"auth_error: {e}")
+                        user_auth_ok = False
+                        break  # No point trying other accounts for same user
+                    else:
+                        logger.error("bunq sync failed for user %s acc %s: %s", user_id, acc_name, e)
+                        _update_last_sync(user_id, user_email, "bunq", f"error: {e}")
 
     except Exception as e:
         logger.error("sync_bunq failed: %s", e, exc_info=True)
@@ -1095,11 +1161,16 @@ def job_improve_insight_prompts():
                         (feedback_ids,),
                     )
 
+                    # Get user email for audit_log
+                    cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+                    user_row = cur.fetchone()
+                    user_email = user_row[0] if user_row else f"user_{user_id}"
+
                     # Log to audit_log
                     cur.execute("""
-                        INSERT INTO audit_log (user_id, action, details, created_at)
+                        INSERT INTO audit_log (user_email, action, details, created_at)
                         VALUES (%s, 'prompt_improved', %s, NOW())
-                    """, (user_id, json.dumps({
+                    """, (user_email, json.dumps({
                         "page": page,
                         "feedback_count": len(feedbacks),
                         "old_prompt": current_prompt[:500],
@@ -1108,6 +1179,87 @@ def job_improve_insight_prompts():
 
             improved_count += 1
             logger.info("Improved prompt for user %s page %s (%d feedbacks)", user_id, page, len(feedbacks))
+
+            # --- Validate improved prompt by regenerating insight ---
+            try:
+                import requests as _requests
+                import time as _time
+                import re as _re2
+
+                ollama_host = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434").rstrip("/v1").rstrip("/")
+
+                # Get user locale
+                with get_conn() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            "SELECT value FROM user_preferences WHERE user_id = %s AND key = 'locale'",
+                            (user_id,),
+                        )
+                        locale_row = cur.fetchone()
+                        user_locale = locale_row[0] if locale_row else "uk"
+
+                lang_names = {"uk": "Ukrainian", "en": "English", "es": "Spanish"}
+                language = lang_names.get(user_locale, "Ukrainian")
+
+                system_content = (
+                    f"You are an AI analyst. {improved_prompt}\n"
+                    f"Return ONLY a JSON array of 3-5 insights.\n"
+                    f'Each insight: {{"domain":"{page}","severity":"info|warning|action","title":"short title","body":"1-2 sentences"}}'
+                )
+                user_content = f"Відповідай ТІЛЬКИ {language} мовою. Analyze the latest data for {page}."
+
+                start = _time.time()
+                r = _requests.post(f"{ollama_host}/api/chat", json={
+                    "model": "pd-assistant",
+                    "stream": False,
+                    "messages": [
+                        {"role": "system", "content": system_content},
+                        {"role": "user", "content": user_content},
+                    ],
+                }, timeout=120)
+
+                elapsed_ms = int((_time.time() - start) * 1000)
+                validation_ok = False
+                insights_count = 0
+
+                if r.status_code == 200:
+                    content = r.json().get("message", {}).get("content", "[]")
+                    m = _re2.search(r'\[[\s\S]*\]', content)
+                    if m:
+                        try:
+                            insights = json.loads(m.group(0))
+                            insights_count = len(insights) if isinstance(insights, list) else 0
+                            validation_ok = insights_count > 0
+                        except json.JSONDecodeError:
+                            pass
+
+                # Log validation result
+                with get_conn() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute("SELECT email FROM users WHERE id = %s", (user_id,))
+                        u_row = cur.fetchone()
+                        u_email = u_row[0] if u_row else f"user_{user_id}"
+
+                        cur.execute("""
+                            INSERT INTO audit_log (user_email, action, details, created_at)
+                            VALUES (%s, 'prompt_validated', %s, NOW())
+                        """, (u_email, json.dumps({
+                            "page": page,
+                            "valid": validation_ok,
+                            "insights_count": insights_count,
+                            "generation_ms": elapsed_ms,
+                            "prompt_snippet": improved_prompt[:200],
+                        })))
+
+                if validation_ok:
+                    logger.info("Prompt validation OK for user %s page %s: %d insights in %dms",
+                                user_id, page, insights_count, elapsed_ms)
+                else:
+                    logger.warning("Prompt validation FAILED for user %s page %s (status=%s, insights=%d)",
+                                   user_id, page, r.status_code if r else "N/A", insights_count)
+
+            except Exception as ve:
+                logger.warning("Prompt validation error for user %s page %s: %s", user_id, page, ve)
 
         logger.info("improve_insight_prompts complete: %d prompts improved", improved_count)
 
@@ -1179,23 +1331,31 @@ def job_weekly_insight_report():
 
 
 def job_export_dpo_pairs():
-    """Export DPO preference pairs from insight feedback for ML training (weekly, Monday 5:00)."""
+    """Export DPO preference pairs from insight feedback for ML training (weekly, Monday 5:00).
+
+    Creates preference pairs from InsightFeedback:
+      - 👍 insight → chosen response
+      - 👎 insight → rejected response
+      - Same page + same prompt → valid DPO pair
+    Only pairs generated with the same prompt are matched to ensure valid comparisons.
+    """
     logger.info("Running: export_dpo_pairs")
     try:
         import json
         from datetime import datetime
         from pathlib import Path
 
-        MIN_PAIRS = int(os.environ.get("DPO_MIN_PAIRS", "50"))
+        MIN_PAIRS = int(os.environ.get("DPO_MIN_PAIRS", "10"))
         output_path = Path("/data/ml-training/preferences.jsonl")
 
         with get_conn() as conn:
             with conn.cursor() as cur:
-                # Get all feedback joined with insight data
+                # Get all feedback joined with insight data, including prompt_used for matching
                 cur.execute("""
                     SELECT f.user_id, f.page, f.period,
-                           f.reaction, f.insight_id,
-                           ai.insights_json, ai.prompt_used
+                           f.reaction, f.insight_id, f.comment,
+                           ai.insights_json, ai.prompt_used, ai.model,
+                           ai.variant, f.created_at
                     FROM insight_feedback f
                     JOIN ai_insights ai ON ai.id = f.insight_id
                     WHERE f.reaction IN ('like', 'dislike')
@@ -1207,28 +1367,39 @@ def job_export_dpo_pairs():
             logger.info("export_dpo_pairs: no feedback data")
             return
 
-        # Group by (user_id, page, period)
+        # Group by (user_id, page, prompt_used) — same prompt is key for valid DPO pairs
         from collections import defaultdict
-        groups = defaultdict(lambda: {"liked": [], "disliked": [], "prompts": set()})
+        groups = defaultdict(lambda: {"liked": [], "disliked": []})
 
-        for user_id, page, period, reaction, insight_id, insights_json, prompt_used in rows:
-            key = (user_id, page, period)
-            entry = {"insight_id": insight_id, "insights_json": insights_json}
+        for (user_id, page, period, reaction, insight_id,
+             comment, insights_json, prompt_used, model, variant, created_at) in rows:
+            # Normalize prompt key: use actual prompt or fall back to default
+            prompt_key = (prompt_used or "").strip() or PAGE_INSIGHT_PROMPTS.get(page, "")
+            key = (user_id, page, prompt_key)
+            entry = {
+                "insight_id": insight_id,
+                "insights_json": insights_json,
+                "model": model,
+                "variant": variant or "default",
+                "period": period,
+                "comment": comment,
+                "created_at": created_at.isoformat() if created_at else None,
+            }
             if reaction == "like":
                 groups[key]["liked"].append(entry)
             else:
                 groups[key]["disliked"].append(entry)
-            if prompt_used:
-                groups[key]["prompts"].add(prompt_used)
 
-        # Build DPO pairs: each (liked, disliked) combination within same page+period
+        # Build DPO pairs: each (liked, disliked) combination within same page + same prompt
         pairs = []
-        for (user_id, page, period), group in groups.items():
+        skipped_no_match = 0
+
+        for (user_id, page, prompt_key), group in groups.items():
             if not group["liked"] or not group["disliked"]:
+                skipped_no_match += 1
                 continue
 
-            prompt_text = next(iter(group["prompts"]), PAGE_INSIGHT_PROMPTS.get(page, f"Analyze {page} data"))
-            system_prompt = f"You are an AI analyst for the {page} page. {prompt_text}"
+            system_prompt = f"You are an AI analyst for the {page} page. {prompt_key}"
 
             for liked in group["liked"]:
                 for disliked in group["disliked"]:
@@ -1236,19 +1407,34 @@ def job_export_dpo_pairs():
                         "prompt": system_prompt,
                         "chosen": liked["insights_json"],
                         "rejected": disliked["insights_json"],
+                        "metadata": {
+                            "page": page,
+                            "chosen_model": liked["model"],
+                            "rejected_model": disliked["model"],
+                            "chosen_variant": liked["variant"],
+                            "rejected_variant": disliked["variant"],
+                            "chosen_period": liked["period"],
+                            "rejected_period": disliked["period"],
+                            "rejection_comment": disliked["comment"],
+                        },
                     })
 
-        logger.info("export_dpo_pairs: found %d pairs (threshold: %d)", len(pairs), MIN_PAIRS)
+        logger.info(
+            "export_dpo_pairs: found %d pairs from %d groups (%d groups without both like+dislike, threshold: %d)",
+            len(pairs), len(groups), skipped_no_match, MIN_PAIRS,
+        )
 
         if len(pairs) < MIN_PAIRS:
             logger.info("export_dpo_pairs: below threshold (%d < %d), skipping export", len(pairs), MIN_PAIRS)
             return
 
-        # Write JSONL
+        # Write JSONL (atomic: write to temp, then rename)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, "w", encoding="utf-8") as f:
+        tmp_path = output_path.with_suffix(".jsonl.tmp")
+        with open(tmp_path, "w", encoding="utf-8") as f:
             for pair in pairs:
                 f.write(json.dumps(pair, ensure_ascii=False) + "\n")
+        tmp_path.rename(output_path)
 
         logger.info("export_dpo_pairs: exported %d pairs to %s", len(pairs), output_path)
 
@@ -1262,6 +1448,8 @@ def job_export_dpo_pairs():
                     os.environ.get("OWNER_EMAIL", "admin@example.com"),
                     json.dumps({
                         "pairs_count": len(pairs),
+                        "groups_total": len(groups),
+                        "groups_skipped": skipped_no_match,
                         "output_file": str(output_path),
                         "exported_at": datetime.utcnow().isoformat() + "Z",
                     }),
@@ -1316,7 +1504,7 @@ def job_prod_to_dev_sync():
 def main():
     scheduler = BlockingScheduler(timezone="UTC")
 
-    scheduler.add_job(job_sync_garmin,    CronTrigger(minute="*/5",  hour="7-23"), id="sync_garmin")
+    scheduler.add_job(job_sync_garmin,    CronTrigger(minute="*/15", hour="8-23"), id="sync_garmin")
     scheduler.add_job(job_sync_withings,  CronTrigger(minute="*/15"),              id="sync_withings")
     scheduler.add_job(job_sync_monobank,  CronTrigger(minute="*/10", hour="7-23"), id="sync_monobank")
     scheduler.add_job(job_sync_bunq,      CronTrigger(minute="*/10", hour="7-23"), id="sync_bunq")

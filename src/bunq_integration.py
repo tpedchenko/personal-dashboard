@@ -5,6 +5,7 @@ Supports OAuth2 flow (Client ID + Secret) and API key auth.
 Pattern mirrors src/monobank.py for consistency.
 """
 
+import base64
 import json
 import logging
 import os
@@ -15,6 +16,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding
 
 from src.database import add_transaction, get_conn, get_existing_external_ids, get_secret, set_secret
 
@@ -137,6 +140,21 @@ def get_oauth_redirect_uri() -> str:
     return base.rstrip("/") + "/"
 
 
+# ─── Request signing ─────────────────────────────────────────────────────────
+
+def _sign_request(body_bytes: bytes, private_key_pem: str) -> str:
+    """Sign request body with RSA-SHA256 and return base64 signature.
+
+    bunq API requires X-Bunq-Client-Signature header on all requests
+    after installation (device-server, session-server, and all API calls).
+    """
+    private_key = serialization.load_pem_private_key(
+        private_key_pem.encode(), password=None
+    )
+    signature = private_key.sign(body_bytes, padding.PKCS1v15(), hashes.SHA256())
+    return base64.b64encode(signature).decode()
+
+
 # ─── bunq REST API client (replaces broken SDK) ─────────────────────────────
 
 def _get_session_path(user_suffix: str = "") -> str:
@@ -168,7 +186,7 @@ def _load_session(user_suffix: str = "") -> dict | None:
 
 
 def _bunq_request(method: str, endpoint: str, session_token: str,
-                  data: dict = None) -> dict:
+                  data: dict = None, private_key_pem: str = None) -> dict:
     """Make an authenticated request to bunq API."""
     url = f"{BUNQ_API_BASE}/v1/{endpoint}"
     headers = {
@@ -176,10 +194,20 @@ def _bunq_request(method: str, endpoint: str, session_token: str,
         "X-Bunq-Client-Authentication": session_token,
         "User-Agent": "PersonalDashboard/1.0",
     }
+
+    # Sign the request body if private key is available
+    if method == "GET":
+        body_bytes = b""
+    else:
+        body_bytes = json.dumps(data or {}).encode()
+
+    if private_key_pem:
+        headers["X-Bunq-Client-Signature"] = _sign_request(body_bytes, private_key_pem)
+
     if method == "GET":
         resp = requests.get(url, headers=headers, timeout=30)
     elif method == "POST":
-        resp = requests.post(url, headers=headers, json=data or {}, timeout=30)
+        resp = requests.post(url, headers=headers, data=body_bytes, timeout=30)
     else:
         raise ValueError(f"Unsupported method: {method}")
 
@@ -196,7 +224,6 @@ def _create_installation(api_key: str) -> tuple[str, int]:
     """
     # Generate a simple RSA key pair for signing (bunq requires it)
     from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat.primitives import serialization
 
     private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     public_key_pem = private_key.public_key().public_bytes(
@@ -234,20 +261,24 @@ def _create_installation(api_key: str) -> tuple[str, int]:
     return installation_token, installation_id, private_key_pem, public_key_pem
 
 
-def _register_device(installation_token: str, api_key: str) -> int:
+def _register_device(installation_token: str, api_key: str, private_key_pem: str) -> int:
     """Step 2: Register device-server."""
+    body = {
+        "description": "Personal Dashboard",
+        "secret": api_key,
+        "permitted_ips": ["*"],
+    }
+    body_bytes = json.dumps(body).encode()
+    headers = {
+        "Content-Type": "application/json",
+        "X-Bunq-Client-Authentication": installation_token,
+        "X-Bunq-Client-Signature": _sign_request(body_bytes, private_key_pem),
+        "User-Agent": "PersonalDashboard/1.0",
+    }
     resp = requests.post(
         f"{BUNQ_API_BASE}/v1/device-server",
-        headers={
-            "Content-Type": "application/json",
-            "X-Bunq-Client-Authentication": installation_token,
-            "User-Agent": "PersonalDashboard/1.0",
-        },
-        json={
-            "description": "Personal Dashboard",
-            "secret": api_key,
-            "permitted_ips": ["*"],
-        },
+        headers=headers,
+        data=body_bytes,
         timeout=30,
     )
     if resp.status_code not in (200, 201):
@@ -260,16 +291,20 @@ def _register_device(installation_token: str, api_key: str) -> int:
     return 0
 
 
-def _create_session(installation_token: str, api_key: str) -> tuple[str, int]:
+def _create_session(installation_token: str, api_key: str, private_key_pem: str) -> tuple[str, int]:
     """Step 3: Create session — get session token and user ID."""
+    body = {"secret": api_key}
+    body_bytes = json.dumps(body).encode()
+    headers = {
+        "Content-Type": "application/json",
+        "X-Bunq-Client-Authentication": installation_token,
+        "X-Bunq-Client-Signature": _sign_request(body_bytes, private_key_pem),
+        "User-Agent": "PersonalDashboard/1.0",
+    }
     resp = requests.post(
         f"{BUNQ_API_BASE}/v1/session-server",
-        headers={
-            "Content-Type": "application/json",
-            "X-Bunq-Client-Authentication": installation_token,
-            "User-Agent": "PersonalDashboard/1.0",
-        },
-        json={"secret": api_key},
+        headers=headers,
+        data=body_bytes,
         timeout=30,
     )
     if resp.status_code not in (200, 201):
@@ -305,19 +340,20 @@ def create_api_context(api_key: str, user_suffix: str = "") -> dict:
     # Step 1: Installation
     installation_token, installation_id, private_key, public_key = _create_installation(api_key)
 
-    # Step 2: Device registration
-    _register_device(installation_token, api_key)
+    # Step 2: Device registration (requires signing)
+    _register_device(installation_token, api_key, private_key)
 
-    # Step 3: Session
-    session_token, user_id, display_name = _create_session(installation_token, api_key)
+    # Step 3: Session (requires signing)
+    session_token, user_id, display_name = _create_session(installation_token, api_key, private_key)
 
-    # Save session for reuse
+    # Save session for reuse (including private key for signing future requests)
     session_data = {
         "api_key": api_key,
         "session_token": session_token,
         "user_id": user_id,
         "display_name": display_name,
         "installation_token": installation_token,
+        "private_key_pem": private_key,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     _save_session(session_data, user_suffix)
@@ -355,8 +391,10 @@ def get_accounts(api_key: str, user_suffix: str = "") -> list[dict]:
     session = _ensure_context(api_key, user_suffix)
     session_token = session["session_token"]
     user_id = session["user_id"]
+    private_key_pem = session.get("private_key_pem")
 
-    data = _bunq_request("GET", f"user/{user_id}/monetary-account", session_token)
+    data = _bunq_request("GET", f"user/{user_id}/monetary-account", session_token,
+                         private_key_pem=private_key_pem)
     response = data.get("Response", [])
 
     accounts = []
@@ -391,13 +429,13 @@ def get_accounts(api_key: str, user_suffix: str = "") -> list[dict]:
 # ─── Transaction fetching ────────────────────────────────────────────────────
 
 def _fetch_payments(session_token: str, user_id: int, account_id: int,
-                    since_date: str = None) -> list[dict]:
+                    since_date: str = None, private_key_pem: str = None) -> list[dict]:
     """Fetch payments from a bunq account via REST API."""
     all_payments = []
     url = f"user/{user_id}/monetary-account/{account_id}/payment?count=100"
 
     while url:
-        data = _bunq_request("GET", url, session_token)
+        data = _bunq_request("GET", url, session_token, private_key_pem=private_key_pem)
         response = data.get("Response", [])
 
         if not response:
@@ -467,6 +505,7 @@ def sync_bunq(
     session = _ensure_context(api_key, user_suffix)
     session_token = session["session_token"]
     user_id = session["user_id"]
+    private_key_pem = session.get("private_key_pem")
 
     since_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
 
@@ -474,7 +513,8 @@ def sync_bunq(
         progress_callback(0, 1, "Fetching payments from bunq...")
 
     try:
-        payments = _fetch_payments(session_token, user_id, account_id, since_date=since_date)
+        payments = _fetch_payments(session_token, user_id, account_id, since_date=since_date,
+                                   private_key_pem=private_key_pem)
     except Exception as e:
         log.error("Failed to fetch bunq payments: %s", e)
         if progress_callback:

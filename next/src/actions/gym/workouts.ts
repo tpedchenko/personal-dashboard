@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/current-user";
 import { updateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache-tags";
-import { invalidateAiContextSnapshot } from "@/actions/chat-context";
+import { invalidateAiContextSnapshot } from "@/actions/chat-context/index";
 import { z, ZodError } from "zod";
 import { dateSchema, getWorkoutsSchema, createWorkoutSchema, completeWorkoutSchema, updateWorkoutSchema } from "@/lib/validations";
 import { toDateOnly, dateToString } from "@/lib/date-utils";

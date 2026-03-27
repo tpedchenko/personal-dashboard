@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import { periodKeyFromPreset } from "@/lib/ai-insights-prompts";
-import { generateInsightsCore } from "@/actions/insights";
+import { generateInsightsCore } from "@/actions/insights/index";
 import { checkRateLimit, RateLimitError, rateLimitResponse } from "@/lib/rate-limit";
 
 const langNames: Record<string, string> = {
@@ -23,6 +23,7 @@ export async function GET(request: Request) {
     await checkRateLimit(session.user.email, "/api/insights");
   } catch (e) {
     if (e instanceof RateLimitError) return rateLimitResponse(e);
+    console.warn("[rate-limit] Unexpected error in /api/insights, allowing request:", e);
   }
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
     await checkRateLimit(session.user.email, "/api/insights");
   } catch (e) {
     if (e instanceof RateLimitError) return rateLimitResponse(e);
+    console.warn("[rate-limit] Unexpected error in /api/insights, allowing request:", e);
   }
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } });

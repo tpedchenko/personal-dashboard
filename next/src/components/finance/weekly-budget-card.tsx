@@ -54,21 +54,7 @@ export function WeeklyBudgetCard({ weeklyBudget }: WeeklyBudgetCardProps) {
               {formatEur(weeklyBudget.remaining)}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {t("weekly_available")}
-            </span>
-            <span
-              className={`font-bold ${
-                weeklyBudget.weeklyBudget >= 0
-                  ? "text-income"
-                  : "text-expense"
-              }`}
-            >
-              {formatEur(weeklyBudget.weeklyBudget)}
-            </span>
-          </div>
-          {/* Pace indicator with day markers */}
+          {/* Spending progress: how much of discretionary budget is used */}
           <div className="mt-1">
             <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
@@ -77,18 +63,11 @@ export function WeeklyBudgetCard({ weeklyBudget }: WeeklyBudgetCardProps) {
                 }`}
                 style={{ width: `${Math.min(pct, 100)}%` }}
               />
-              {/* Today marker */}
+              {/* Today marker — big red dot */}
               <div
-                className="absolute top-0 h-full w-0.5 bg-red-500"
-                style={{ left: `${dayPct}%` }}
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500 border-2 border-background shadow-lg"
+                style={{ left: `${dayPct}%`, marginLeft: "-8px" }}
               />
-            </div>
-            <div className="mt-0.5 text-xs text-muted-foreground text-right">
-              {pct > 100
-                ? t("pace_over")
-                : pct > 75
-                  ? t("pace_caution")
-                  : t("pace_good")}
             </div>
           </div>
         </div>

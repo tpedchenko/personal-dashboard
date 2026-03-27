@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/current-user";
-import { invalidateAiContextSnapshot } from "@/actions/chat-context";
+import { invalidateAiContextSnapshot } from "@/actions/chat-context/index";
 import { upsertEmbedding } from "@/lib/embeddings";
 import { z, ZodError } from "zod";
 import { dateSchema, saveDailyLogSchema } from "@/lib/validations";

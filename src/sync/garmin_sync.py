@@ -114,12 +114,19 @@ def authenticate_garmin(email: str, password: str, garth_dir: str,
 
     Path(garth_dir).mkdir(parents=True, exist_ok=True)
 
-    # Try loading saved session first
+    # Try loading saved garth session first (avoids fresh login / rate limits)
     try:
         client = Garmin(email, password)
         client.login(garth_dir)
+        # Verify session is still valid with a lightweight API call
+        client.get_user_summary()
         return client
-    except Exception:
+    except Exception as e:
+        err_str = str(e)
+        # If we got a 429 even on session resume, propagate it immediately
+        if "429" in err_str or "Too Many Requests" in err_str:
+            raise
+        # Otherwise, session is stale — try fresh login below
         pass
 
     # Fresh login -- may trigger MFA

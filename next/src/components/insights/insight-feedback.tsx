@@ -5,7 +5,7 @@ import { ThumbsUpIcon, ThumbsDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { submitInsightFeedback } from "@/actions/insights";
+import { submitInsightFeedback } from "@/actions/insights/index";
 
 type Props = {
   insightId: number;

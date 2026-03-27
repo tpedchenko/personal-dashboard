@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/current-user";
 import { toDateOnly, dateToString } from "@/lib/date-utils";
+import { buildFinanceContext } from "./finance";
+import { buildHealthContext } from "./health";
+import { buildGymContext } from "./gym";
 
 const SNAPSHOT_PERIOD_TYPE = "chat-context";
 const SNAPSHOT_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -184,19 +187,21 @@ export async function getUserContext(): Promise<string> {
     }
   }
 
-  // Budget progress
+  // Budget progress — query ALL current month expenses (not just the 50 recent ones)
   if (budgets.length > 0) {
-    // Get current month spending by category
-    const currentMonthStart = `${currentMonth}-01`;
-    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-    const currentMonthEnd = fmtDate(nextMonth);
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    const monthExpenses = transactions.filter(
-      (tx) => tx.type === "EXPENSE" && dateToString(tx.date) >= currentMonthStart && dateToString(tx.date) < currentMonthEnd
-    );
+    const currentMonthExpenses = await prisma.transaction.findMany({
+      where: {
+        userId: user.id,
+        type: "EXPENSE",
+        date: { gte: toDateOnly(fmtDate(firstDayOfMonth)) },
+      },
+      select: { category: true, amountEur: true },
+    });
 
     const spentByCategory: Record<string, number> = {};
-    for (const tx of monthExpenses) {
+    for (const tx of currentMonthExpenses) {
       if (tx.category && tx.amountEur != null) {
         spentByCategory[tx.category] = (spentByCategory[tx.category] ?? 0) + Math.abs(tx.amountEur);
       }
@@ -421,268 +426,32 @@ export async function getPageContext(page: string): Promise<string> {
   thirtyDaysAgo.setDate(today.getDate() - 30);
 
   const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
-  const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
-  const parts: string[] = [];
-
-  // Transactions, account balances, budget progress, finance summary
-  if (
+  // Determine which domain modules to call
+  const needsFinance =
     allowedSections.includes("transactions") ||
     allowedSections.includes("account_balances") ||
     allowedSections.includes("budget_progress") ||
-    allowedSections.includes("finance_summary")
-  ) {
-    const [transactions, accountBalances, budgets] = await Promise.all([
-      allowedSections.includes("transactions") || allowedSections.includes("finance_summary") || allowedSections.includes("budget_progress")
-        ? prisma.transaction.findMany({
-            where: { userId: user.id },
-            orderBy: { date: "desc" },
-            take: 50,
-            select: {
-              date: true, type: true, category: true,
-              amountOriginal: true, currencyOriginal: true,
-              amountEur: true, description: true, account: true,
-            },
-          })
-        : Promise.resolve([]),
-      allowedSections.includes("account_balances")
-        ? prisma.transaction.groupBy({
-            by: ["account"],
-            where: { userId: user.id },
-            _sum: { amountEur: true },
-          })
-        : Promise.resolve([]),
-      allowedSections.includes("budget_progress")
-        ? prisma.budget.findMany({
-            where: { userId: user.id, active: true },
-            select: { category: true, amountEur: true, month: true },
-          })
-        : Promise.resolve([]),
-    ]);
+    allowedSections.includes("finance_summary") ||
+    allowedSections.includes("trading");
 
-    if (allowedSections.includes("transactions") && transactions.length > 0) {
-      const txLines = transactions.map((tx) => {
-        const items: string[] = [`  ${dateToString(tx.date)}:`];
-        if (tx.type) items.push(`type=${tx.type}`);
-        if (tx.category) items.push(`cat=${tx.category}`);
-        if (tx.amountOriginal != null && tx.currencyOriginal) {
-          items.push(`${tx.amountOriginal} ${tx.currencyOriginal}`);
-        }
-        if (tx.amountEur != null) items.push(`(EUR ${tx.amountEur.toFixed(2)})`);
-        if (tx.description) items.push(`"${tx.description}"`);
-        return items.join(" ");
-      });
-      parts.push(`Recent Transactions (last 50):\n${txLines.join("\n")}`);
-    }
+  const needsHealth =
+    allowedSections.includes("daily_log") ||
+    allowedSections.includes("garmin_daily") ||
+    allowedSections.includes("garmin_sleep") ||
+    allowedSections.includes("food_log") ||
+    allowedSections.includes("weight");
 
-    if (allowedSections.includes("finance_summary") && transactions.length > 0) {
-      const last30Tx = transactions.filter((tx) => dateToString(tx.date) >= fmtDate(thirtyDaysAgo));
-      let totalIncome = 0;
-      let totalExpenses = 0;
-      for (const tx of last30Tx) {
-        const amt = tx.amountEur ?? 0;
-        if (tx.type === "INCOME") totalIncome += amt;
-        else if (tx.type === "EXPENSE") totalExpenses += amt;
-      }
-      parts.push(
-        `Finance Summary (30 days): income EUR ${totalIncome.toFixed(0)}, expenses EUR ${Math.abs(totalExpenses).toFixed(0)}, net EUR ${(totalIncome + totalExpenses).toFixed(0)}`
-      );
-    }
+  const needsGym = allowedSections.includes("workouts");
 
-    if (allowedSections.includes("account_balances") && accountBalances.length > 0) {
-      const balLines = accountBalances
-        .filter((a) => a.account)
-        .map((a) => `  ${a.account}: EUR ${(a._sum.amountEur ?? 0).toFixed(2)}`);
-      if (balLines.length > 0) {
-        parts.push(`Account Balances:\n${balLines.join("\n")}`);
-      }
-    }
+  // Call domain modules in parallel
+  const [financeParts, healthParts, gymParts] = await Promise.all([
+    needsFinance ? buildFinanceContext(user.id, allowedSections, today, fourteenDaysAgo, thirtyDaysAgo) : Promise.resolve([]),
+    needsHealth ? buildHealthContext(user.id, allowedSections, today, fourteenDaysAgo) : Promise.resolve([]),
+    needsGym ? buildGymContext(user.id, allowedSections) : Promise.resolve([]),
+  ]);
 
-    if (allowedSections.includes("budget_progress") && budgets.length > 0) {
-      const currentMonthStart = `${currentMonth}-01`;
-      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-      const currentMonthEnd = fmtDate(nextMonth);
-
-      const monthExpenses = transactions.filter(
-        (tx) => tx.type === "EXPENSE" && dateToString(tx.date) >= currentMonthStart && dateToString(tx.date) < currentMonthEnd
-      );
-
-      const spentByCategory: Record<string, number> = {};
-      for (const tx of monthExpenses) {
-        if (tx.category && tx.amountEur != null) {
-          spentByCategory[tx.category] = (spentByCategory[tx.category] ?? 0) + Math.abs(tx.amountEur);
-        }
-      }
-
-      const budgetLines = budgets.map((b) => {
-        const spent = spentByCategory[b.category] ?? 0;
-        const pct = b.amountEur > 0 ? Math.round((spent / b.amountEur) * 100) : 0;
-        return `  ${b.category}: EUR ${spent.toFixed(0)} / EUR ${b.amountEur.toFixed(0)} (${pct}%)`;
-      });
-      parts.push(`Budget Progress (${currentMonth}):\n${budgetLines.join("\n")}`);
-    }
-  }
-
-  // Daily log
-  if (allowedSections.includes("daily_log")) {
-    const dailyLogs = await prisma.dailyLog.findMany({
-      where: { date: { gte: toDateOnly(fmtDate(fourteenDaysAgo)) }, userId: user.id },
-      orderBy: { date: "desc" },
-      take: 14,
-    });
-    if (dailyLogs.length > 0) {
-      const logLines = dailyLogs.map((d) => {
-        const items: string[] = [`  ${dateToString(d.date)}:`];
-        if (d.level != null) items.push(`level=${d.level}`);
-        if (d.moodDelta != null) items.push(`mood_delta=${d.moodDelta}`);
-        if (d.energyLevel != null) items.push(`energy=${d.energyLevel}`);
-        if (d.stressLevel != null) items.push(`stress=${d.stressLevel}`);
-        if (d.focusQuality != null) items.push(`focus=${d.focusQuality}`);
-        if (d.alcohol != null && d.alcohol > 0) items.push(`alcohol=${d.alcohol}`);
-        if (d.kidsHours != null && d.kidsHours > 0) items.push(`kids=${d.kidsHours}h`);
-        if (d.generalNote) items.push(`note="${d.generalNote}"`);
-        return items.join(" ");
-      });
-      parts.push(`Daily Log (last 14 days):\n${logLines.join("\n")}`);
-    }
-  }
-
-  // Garmin daily
-  if (allowedSections.includes("garmin_daily")) {
-    const garminDaily = await prisma.garminDaily.findMany({
-      where: { userId: user.id, date: { gte: toDateOnly(fmtDate(fourteenDaysAgo)) } },
-      orderBy: { date: "desc" },
-      take: 14,
-    });
-    if (garminDaily.length > 0) {
-      const gLines = garminDaily.map((g) => {
-        const items: string[] = [`  ${dateToString(g.date)}:`];
-        if (g.steps != null) items.push(`steps=${g.steps}`);
-        if (g.sleepSeconds != null) items.push(`sleep=${(g.sleepSeconds / 3600).toFixed(1)}h`);
-        if (g.restingHr != null) items.push(`restHR=${g.restingHr}`);
-        if (g.avgStress != null) items.push(`stress=${g.avgStress}`);
-        if (g.bodyBatteryHigh != null) items.push(`bodyBattery=${g.bodyBatteryLow}-${g.bodyBatteryHigh}`);
-        if (g.sleepScore != null) items.push(`sleepScore=${g.sleepScore}`);
-        if (g.caloriesTotal != null) items.push(`cal=${g.caloriesTotal}`);
-        if (g.hrvLastNight != null) items.push(`hrv=${g.hrvLastNight}ms`);
-        return items.join(" ");
-      });
-      parts.push(`Garmin Daily (last 14 days):\n${gLines.join("\n")}`);
-    }
-  }
-
-  // Garmin sleep
-  if (allowedSections.includes("garmin_sleep")) {
-    const garminSleep = await prisma.garminSleep.findMany({
-      where: { userId: user.id, date: { gte: toDateOnly(fmtDate(fourteenDaysAgo)) } },
-      orderBy: { date: "desc" },
-      take: 14,
-    });
-    if (garminSleep.length > 0) {
-      const sLines = garminSleep.map((s) => {
-        const hrs = s.durationSeconds ? (s.durationSeconds / 3600).toFixed(1) : "?";
-        const items: string[] = [`  ${dateToString(s.date)}: ${hrs}h total`];
-        if (s.deepSeconds) items.push(`deep=${(s.deepSeconds / 60).toFixed(0)}m`);
-        if (s.remSeconds) items.push(`rem=${(s.remSeconds / 60).toFixed(0)}m`);
-        if (s.sleepScore != null) items.push(`score=${s.sleepScore}`);
-        return items.join(" ");
-      });
-      parts.push(`Sleep (last 14 days):\n${sLines.join("\n")}`);
-    }
-  }
-
-  // Workouts
-  if (allowedSections.includes("workouts")) {
-    const workouts = await prisma.gymWorkout.findMany({
-      where: { userId: user.id },
-      orderBy: { date: "desc" },
-      take: 5,
-      include: {
-        exercises: {
-          include: {
-            exercise: { select: { name: true } },
-            sets: { select: { weightKg: true, reps: true } },
-          },
-        },
-      },
-    });
-    if (workouts.length > 0) {
-      const wLines = workouts.map((w) => {
-        const exerciseCount = w.exercises.length;
-        let totalVolume = 0;
-        for (const ex of w.exercises) {
-          for (const s of ex.sets) {
-            totalVolume += (s.weightKg ?? 0) * (s.reps ?? 0);
-          }
-        }
-        const items: string[] = [`  ${dateToString(w.date)}:`];
-        if (w.workoutName) items.push(`"${w.workoutName}"`);
-        items.push(`${exerciseCount} exercises`);
-        if (totalVolume > 0) items.push(`volume=${totalVolume.toFixed(0)}kg`);
-        if (w.durationMinutes) items.push(`${w.durationMinutes}min`);
-        const exNames = w.exercises.map((e) => e.exercise.name).join(", ");
-        if (exNames) items.push(`[${exNames}]`);
-        return items.join(" ");
-      });
-      parts.push(`Last 5 Workouts:\n${wLines.join("\n")}`);
-    }
-  }
-
-  // Food log
-  if (allowedSections.includes("food_log")) {
-    const foodLogs = await prisma.foodLog.findMany({
-      where: { userId: user.id, date: { gte: toDateOnly(fmtDate(fourteenDaysAgo)) } },
-      orderBy: { date: "desc" },
-      select: { date: true, calories: true, proteinG: true, description: true },
-    });
-    if (foodLogs.length > 0) {
-      const byDate: Record<string, { calories: number; protein: number; items: string[] }> = {};
-      for (const fl of foodLogs) {
-        if (!byDate[dateToString(fl.date)]) byDate[dateToString(fl.date)] = { calories: 0, protein: 0, items: [] };
-        byDate[dateToString(fl.date)].calories += fl.calories ?? 0;
-        byDate[dateToString(fl.date)].protein += fl.proteinG ?? 0;
-        if (fl.description) byDate[dateToString(fl.date)].items.push(fl.description);
-      }
-      const dates = Object.keys(byDate).sort().reverse().slice(0, 7);
-      const fLines = dates.map((d) => {
-        const data = byDate[d];
-        return `  ${d}: ${data.calories.toFixed(0)} kcal, ${data.protein.toFixed(0)}g protein`;
-      });
-      parts.push(`Food Log (last 7 days):\n${fLines.join("\n")}`);
-    }
-  }
-
-  // Weight
-  if (allowedSections.includes("weight")) {
-    const latestWeight = await prisma.garminBodyComposition.findFirst({
-      where: { userId: user.id },
-      orderBy: { date: "desc" },
-      select: { date: true, weight: true, bodyFatPct: true },
-    });
-    if (latestWeight) {
-      const wItems = [`Latest weight (${latestWeight.date}): ${latestWeight.weight}kg`];
-      if (latestWeight.bodyFatPct != null) wItems.push(`fat=${latestWeight.bodyFatPct}%`);
-      parts.push(wItems.join(" "));
-    }
-  }
-
-  // Trading (for investments page)
-  if (allowedSections.includes("trading")) {
-    try {
-      const { getTradingOverview } = await import("@/actions/trading");
-      const trading = await getTradingOverview();
-      if (trading && !trading.error) {
-        const tItems = [];
-        if (trading.profit?.profit_all_coin != null) tItems.push(`Total P&L: ${trading.profit.profit_all_coin.toFixed(4)}`);
-        if (trading.openTrades?.length) tItems.push(`Open trades: ${trading.openTrades.length}`);
-        if (trading.profit?.winning_trades != null && trading.profit?.losing_trades != null) {
-          const total = trading.profit.winning_trades + trading.profit.losing_trades;
-          if (total > 0) tItems.push(`Win rate: ${((trading.profit.winning_trades / total) * 100).toFixed(1)}%`);
-        }
-        if (tItems.length > 0) parts.push(`Trading: ${tItems.join(", ")}`);
-      }
-    } catch (e) { console.error("[chat/getPageContext] Freqtrade context error:", e); }
-  }
+  const parts = [...financeParts, ...healthParts, ...gymParts];
 
   if (parts.length === 0) return "";
 

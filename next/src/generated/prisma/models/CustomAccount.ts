@@ -258,16 +258,17 @@ export type CustomAccountOrderByWithRelationInput = {
 
 export type CustomAccountWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  name?: string
+  userId_name?: Prisma.CustomAccountUserIdNameCompoundUniqueInput
   AND?: Prisma.CustomAccountWhereInput | Prisma.CustomAccountWhereInput[]
   OR?: Prisma.CustomAccountWhereInput[]
   NOT?: Prisma.CustomAccountWhereInput | Prisma.CustomAccountWhereInput[]
+  name?: Prisma.StringFilter<"CustomAccount"> | string
   currency?: Prisma.StringFilter<"CustomAccount"> | string
   isActive?: Prisma.BoolFilter<"CustomAccount"> | boolean
   sortOrder?: Prisma.IntFilter<"CustomAccount"> | number
   initialBalance?: Prisma.FloatFilter<"CustomAccount"> | number
   userId?: Prisma.IntFilter<"CustomAccount"> | number
-}, "id" | "name">
+}, "id" | "userId_name">
 
 export type CustomAccountOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -362,6 +363,11 @@ export type CustomAccountUncheckedUpdateManyInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   initialBalance?: Prisma.FloatFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type CustomAccountUserIdNameCompoundUniqueInput = {
+  userId: number
+  name: string
 }
 
 export type CustomAccountCountOrderByAggregateInput = {

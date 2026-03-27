@@ -6,7 +6,10 @@ import { createGroq } from "@ai-sdk/groq";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/current-user";
 import { getSecretValue } from "@/actions/settings";
-import { toDateOnly, dateToString } from "@/lib/date-utils";
+import { periodKeyFromPreset, getDateRangesForPreset, DEFAULT_PROMPTS, resolvePrompt } from "@/lib/ai-insights-prompts";
+import { getInsightContext } from "./dashboard";
+
+// ── Shared Types ──
 
 export type Insight = {
   domain: string;
@@ -26,7 +29,46 @@ export type PageInsights = {
   variant: string;
 };
 
-import { periodKeyFromPreset, getDateRangesForPreset, DEFAULT_PROMPTS, resolvePrompt } from "@/lib/ai-insights-prompts";
+export type InsightRow = {
+  page: string;
+  period: string;
+  variant: string;
+  date: string;
+  insightsJson: string;
+  promptUsed: string | null;
+  model: string;
+  generatedAt: string | null;
+};
+
+export type FeedbackPageStats = {
+  page: string;
+  likes: number;
+  dislikes: number;
+  lastFeedback: string | null;
+};
+
+export type PromptChange = {
+  page: string;
+  changedAt: string;
+  details: string;
+};
+
+export type ABTestPageStats = {
+  page: string;
+  defaultLikes: number;
+  defaultDislikes: number;
+  defaultTotal: number;
+  defaultWinRate: number;
+  customLikes: number;
+  customDislikes: number;
+  customTotal: number;
+  customWinRate: number;
+  hasCustomPrompt: boolean;
+};
+
+// ── Helpers ──
+
+const LANG_NAMES: Record<string, string> = { uk: "Ukrainian", en: "English", es: "Spanish" };
 
 /**
  * Human-readable comparison period for a preset (used as {comparison_period} placeholder).
@@ -101,6 +143,8 @@ function parseInsightsJson(raw: string, page: string): Insight[] {
   }
 }
 
+// ── Read Operations ──
+
 export async function getPageInsights(page: string, periodPreset?: string): Promise<PageInsights> {
   const user = await requireUser();
   const period = periodKeyFromPreset(periodPreset);
@@ -163,17 +207,6 @@ export async function getAllInsightsSummary(): Promise<PageInsights[]> {
   });
 }
 
-export type InsightRow = {
-  page: string;
-  period: string;
-  variant: string;
-  date: string;
-  insightsJson: string;
-  promptUsed: string | null;
-  model: string;
-  generatedAt: string | null;
-};
-
 export async function getAllInsightsForSettings(): Promise<InsightRow[]> {
   const user = await requireUser();
   const pages = ["finance", "investments", "my-day", "gym", "exercises", "list"];
@@ -197,6 +230,8 @@ export async function getAllInsightsForSettings(): Promise<InsightRow[]> {
     generatedAt: row.createdAt?.toISOString() ?? row.date,
   }));
 }
+
+// ── Prompt Management ──
 
 export async function getInsightPrompt(page: string): Promise<string> {
   const user = await requireUser();
@@ -224,179 +259,24 @@ export async function setInsightPrompt(page: string, prompt: string): Promise<vo
   });
 }
 
-const LANG_NAMES: Record<string, string> = { uk: "Ukrainian", en: "English", es: "Spanish" };
+export async function resetInsightPrompt(page: string): Promise<void> {
+  const user = await requireUser();
+  // Delete custom prompt — system will fall back to DEFAULT_PROMPTS
+  await prisma.userPreference.deleteMany({
+    where: { userId: user.id, key: `insight_prompt_${page}` },
+  });
 
-type DateRange = { start: string; end: string };
-
-/**
- * Fetch period-specific context for AI insights.
- * Queries data for BOTH the current and comparison periods separately,
- * so the AI can see actual differences between periods.
- */
-async function getInsightContext(
-  page: string,
-  userId: number,
-  dateRanges: { current: DateRange; comparison: DateRange },
-): Promise<string> {
-  const { current, comparison } = dateRanges;
-
-  if (page === "exercises") {
-    const { getExerciseInsightsContext } = await import("@/actions/exercise-insights");
-    const ctx = await getExerciseInsightsContext();
-    return `${ctx}\n\n--- Period Info ---\nCurrent period: ${current.start} to ${current.end}\nComparison period: ${comparison.start} to ${comparison.end}`;
-  }
-
-  const parts: string[] = [];
-
-  if (page === "finance" || page === "dashboard") {
-    // Fetch transactions for both periods
-    const [currentTx, comparisonTx] = await Promise.all([
-      prisma.transaction.findMany({
-        where: { userId, date: { gte: toDateOnly(current.start), lte: toDateOnly(current.end) } },
-        orderBy: { date: "desc" },
-        select: { date: true, type: true, category: true, amountEur: true, description: true },
-      }),
-      prisma.transaction.findMany({
-        where: { userId, date: { gte: toDateOnly(comparison.start), lte: toDateOnly(comparison.end) } },
-        orderBy: { date: "desc" },
-        select: { date: true, type: true, category: true, amountEur: true, description: true },
-      }),
-    ]);
-
-    const summarize = (txs: typeof currentTx, label: string) => {
-      let income = 0, expenses = 0;
-      const byCategory: Record<string, number> = {};
-      for (const tx of txs) {
-        const amt = tx.amountEur ?? 0;
-        if (tx.type === "INCOME") income += amt;
-        else if (tx.type === "EXPENSE") {
-          expenses += Math.abs(amt);
-          if (tx.category) byCategory[tx.category] = (byCategory[tx.category] ?? 0) + Math.abs(amt);
-        }
-      }
-      const topCats = Object.entries(byCategory)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([cat, amt]) => `${cat}: EUR ${amt.toFixed(0)}`)
-        .join(", ");
-      return `${label} (${txs.length} transactions): income EUR ${income.toFixed(0)}, expenses EUR ${expenses.toFixed(0)}, net EUR ${(income - expenses).toFixed(0)}. Top categories: ${topCats || "none"}`;
-    };
-
-    parts.push(summarize(currentTx, `CURRENT PERIOD (${current.start} to ${current.end})`));
-    parts.push(summarize(comparisonTx, `COMPARISON PERIOD (${comparison.start} to ${comparison.end})`));
-  }
-
-  if (page === "my-day" || page === "dashboard") {
-    const [currentLogs, comparisonLogs, currentGarmin, comparisonGarmin] = await Promise.all([
-      prisma.dailyLog.findMany({
-        where: { userId, date: { gte: toDateOnly(current.start), lte: toDateOnly(current.end) } },
-        orderBy: { date: "desc" },
-      }),
-      prisma.dailyLog.findMany({
-        where: { userId, date: { gte: toDateOnly(comparison.start), lte: toDateOnly(comparison.end) } },
-        orderBy: { date: "desc" },
-      }),
-      prisma.garminDaily.findMany({
-        where: { userId, date: { gte: toDateOnly(current.start), lte: toDateOnly(current.end) } },
-        orderBy: { date: "desc" },
-      }),
-      prisma.garminDaily.findMany({
-        where: { userId, date: { gte: toDateOnly(comparison.start), lte: toDateOnly(comparison.end) } },
-        orderBy: { date: "desc" },
-      }),
-    ]);
-
-    const summarizeLogs = (logs: typeof currentLogs, label: string) => {
-      if (logs.length === 0) return `${label}: no data`;
-      const avgMood = logs.reduce((s, l) => s + (l.moodDelta ?? 0), 0) / logs.length;
-      const avgEnergy = logs.filter(l => l.energyLevel != null).reduce((s, l) => s + (l.energyLevel ?? 0), 0) / (logs.filter(l => l.energyLevel != null).length || 1);
-      const avgStress = logs.filter(l => l.stressLevel != null).reduce((s, l) => s + (l.stressLevel ?? 0), 0) / (logs.filter(l => l.stressLevel != null).length || 1);
-      return `${label} (${logs.length} days): avg mood_delta=${avgMood.toFixed(1)}, avg energy=${avgEnergy.toFixed(1)}, avg stress=${avgStress.toFixed(1)}`;
-    };
-
-    const summarizeGarmin = (data: typeof currentGarmin, label: string) => {
-      if (data.length === 0) return `${label}: no data`;
-      const avgSteps = data.reduce((s, g) => s + (g.steps ?? 0), 0) / data.length;
-      const avgSleep = data.filter(g => g.sleepSeconds != null).reduce((s, g) => s + (g.sleepSeconds ?? 0), 0) / (data.filter(g => g.sleepSeconds != null).length || 1);
-      const avgHrv = data.filter(g => g.hrvLastNight != null).reduce((s, g) => s + (g.hrvLastNight ?? 0), 0) / (data.filter(g => g.hrvLastNight != null).length || 1);
-      const avgRestHr = data.filter(g => g.restingHr != null).reduce((s, g) => s + (g.restingHr ?? 0), 0) / (data.filter(g => g.restingHr != null).length || 1);
-      return `${label} (${data.length} days): avg steps=${Math.round(avgSteps)}, avg sleep=${(avgSleep / 3600).toFixed(1)}h, avg HRV=${avgHrv.toFixed(0)}ms, avg resting HR=${avgRestHr.toFixed(0)}`;
-    };
-
-    parts.push(summarizeLogs(currentLogs, `CURRENT PERIOD Daily Log (${current.start} to ${current.end})`));
-    parts.push(summarizeLogs(comparisonLogs, `COMPARISON PERIOD Daily Log (${comparison.start} to ${comparison.end})`));
-    parts.push(summarizeGarmin(currentGarmin, `CURRENT PERIOD Garmin (${current.start} to ${current.end})`));
-    parts.push(summarizeGarmin(comparisonGarmin, `COMPARISON PERIOD Garmin (${comparison.start} to ${comparison.end})`));
-  }
-
-  if (page === "gym" || page === "dashboard") {
-    const [currentWorkouts, comparisonWorkouts] = await Promise.all([
-      prisma.gymWorkout.findMany({
-        where: { userId, date: { gte: toDateOnly(current.start), lte: toDateOnly(current.end) } },
-        include: { exercises: { include: { sets: { select: { weightKg: true, reps: true } } } } },
-      }),
-      prisma.gymWorkout.findMany({
-        where: { userId, date: { gte: toDateOnly(comparison.start), lte: toDateOnly(comparison.end) } },
-        include: { exercises: { include: { sets: { select: { weightKg: true, reps: true } } } } },
-      }),
-    ]);
-
-    const summarizeWorkouts = (workouts: typeof currentWorkouts, label: string) => {
-      if (workouts.length === 0) return `${label}: no workouts`;
-      let totalVolume = 0;
-      for (const w of workouts) {
-        for (const ex of w.exercises) {
-          for (const s of ex.sets) totalVolume += (s.weightKg ?? 0) * (s.reps ?? 0);
-        }
-      }
-      const avgDuration = workouts.reduce((s, w) => s + (w.durationMinutes ?? 0), 0) / workouts.length;
-      return `${label} (${workouts.length} workouts): total volume=${Math.round(totalVolume)}kg, avg duration=${Math.round(avgDuration)}min`;
-    };
-
-    parts.push(summarizeWorkouts(currentWorkouts, `CURRENT PERIOD Gym (${current.start} to ${current.end})`));
-    parts.push(summarizeWorkouts(comparisonWorkouts, `COMPARISON PERIOD Gym (${comparison.start} to ${comparison.end})`));
-  }
-
-  if (page === "investments") {
-    // Investments don't have per-day data typically, use the general context
-    const { getPageContext } = await import("@/actions/chat");
-    const ctx = await getPageContext(page);
-    parts.push(ctx);
-    parts.push(`\nCurrent period: ${current.start} to ${current.end}\nComparison period: ${comparison.start} to ${comparison.end}`);
-  }
-
-  if (page === "list") {
-    const [currentFood, comparisonFood] = await Promise.all([
-      prisma.foodLog.findMany({
-        where: { userId, date: { gte: toDateOnly(current.start), lte: toDateOnly(current.end) } },
-        select: { date: true, calories: true, proteinG: true, description: true },
-      }),
-      prisma.foodLog.findMany({
-        where: { userId, date: { gte: toDateOnly(comparison.start), lte: toDateOnly(comparison.end) } },
-        select: { date: true, calories: true, proteinG: true, description: true },
-      }),
-    ]);
-
-    const summarizeFood = (logs: typeof currentFood, label: string) => {
-      if (logs.length === 0) return `${label}: no data`;
-      const totalCal = logs.reduce((s, l) => s + (l.calories ?? 0), 0);
-      const totalProtein = logs.reduce((s, l) => s + (l.proteinG ?? 0), 0);
-      const days = new Set(logs.map(l => dateToString(l.date))).size;
-      return `${label} (${logs.length} entries, ${days} days): total ${totalCal.toFixed(0)} kcal, ${totalProtein.toFixed(0)}g protein, avg ${days > 0 ? (totalCal / days).toFixed(0) : 0} kcal/day`;
-    };
-
-    parts.push(summarizeFood(currentFood, `CURRENT PERIOD Food (${current.start} to ${current.end})`));
-    parts.push(summarizeFood(comparisonFood, `COMPARISON PERIOD Food (${comparison.start} to ${comparison.end})`));
-  }
-
-  if (parts.length === 0) {
-    // Fallback to general context
-    const { getPageContext } = await import("@/actions/chat");
-    return getPageContext(page);
-  }
-
-  return parts.join("\n\n");
+  // Log the reset to audit_log
+  await prisma.auditLog.create({
+    data: {
+      userEmail: user.email,
+      action: "prompt_changed",
+      details: `${page} | reset to default`,
+    },
+  });
 }
+
+// ── Generation ──
 
 /**
  * Generate a single insight variant with a given prompt.
@@ -690,19 +570,6 @@ export async function getInsightFeedback(
 
 // ── Feedback Stats Dashboard ──
 
-export type FeedbackPageStats = {
-  page: string;
-  likes: number;
-  dislikes: number;
-  lastFeedback: string | null;
-};
-
-export type PromptChange = {
-  page: string;
-  changedAt: string;
-  details: string;
-};
-
 export async function getInsightFeedbackStats(): Promise<{
   pageStats: FeedbackPageStats[];
   promptChanges: PromptChange[];
@@ -758,19 +625,6 @@ export async function getInsightFeedbackStats(): Promise<{
 
 // ── A/B Test Stats ──
 
-export type ABTestPageStats = {
-  page: string;
-  defaultLikes: number;
-  defaultDislikes: number;
-  defaultTotal: number;
-  defaultWinRate: number;
-  customLikes: number;
-  customDislikes: number;
-  customTotal: number;
-  customWinRate: number;
-  hasCustomPrompt: boolean;
-};
-
 export async function getABTestStats(): Promise<ABTestPageStats[]> {
   const user = await requireUser();
   const pages = ["finance", "investments", "my-day", "gym", "exercises", "list"];
@@ -818,22 +672,5 @@ export async function getABTestStats(): Promise<ABTestPageStats[]> {
       customWinRate: customTotal > 0 ? Math.round((s.cL / customTotal) * 100) : 0,
       hasCustomPrompt: customPromptPages.has(page),
     };
-  });
-}
-
-export async function resetInsightPrompt(page: string): Promise<void> {
-  const user = await requireUser();
-  // Delete custom prompt — system will fall back to DEFAULT_PROMPTS
-  await prisma.userPreference.deleteMany({
-    where: { userId: user.id, key: `insight_prompt_${page}` },
-  });
-
-  // Log the reset to audit_log
-  await prisma.auditLog.create({
-    data: {
-      userEmail: user.email,
-      action: "prompt_changed",
-      details: `${page} | reset to default`,
-    },
   });
 }

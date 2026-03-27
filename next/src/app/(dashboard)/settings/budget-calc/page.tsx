@@ -278,38 +278,30 @@ export default function BudgetCalcPage() {
                 {weeklyResult.remaining.toFixed(2)} EUR
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                {t("weekly_available")} ({weeklyResult.weeksRemaining} {t("weeks_remaining")})
-              </span>
-              <span
-                className={`font-bold ${
-                  weeklyResult.weeklyBudget >= 0
-                    ? "text-income"
-                    : "text-expense"
-                }`}
-              >
-                {weeklyResult.weeklyBudget.toFixed(2)} EUR
-              </span>
-            </div>
-            {/* Pace indicator */}
+            {/* Pace indicator — same as WeeklyBudgetCard */}
             {(() => {
               const pct =
                 weeklyResult.discretionaryBudget > 0
                   ? (weeklyResult.discretionarySpent / weeklyResult.discretionaryBudget) * 100
                   : 0;
+              const now = new Date();
+              const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+              const todayDay = now.getDate();
+              const dayPct = (todayDay / daysInMonth) * 100;
               return (
                 <div className="mt-1">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className={`h-full rounded-full transition-all ${
                         pct > 100 ? "bg-red-500" : pct > 75 ? "bg-yellow-500" : "bg-green-500"
                       }`}
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />
-                  </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground text-right">
-                    {pct > 100 ? "Over budget" : pct > 75 ? "Caution" : "On track"}
+                    {/* Today marker — big red dot */}
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500 border-2 border-background shadow-lg"
+                      style={{ left: `${dayPct}%`, marginLeft: "-8px" }}
+                    />
                   </div>
                 </div>
               );

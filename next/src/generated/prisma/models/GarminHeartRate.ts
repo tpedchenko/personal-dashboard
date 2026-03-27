@@ -212,6 +212,7 @@ export type GarminHeartRateWhereInput = {
   timestamp?: Prisma.StringFilter<"GarminHeartRate"> | string
   heartRate?: Prisma.IntNullableFilter<"GarminHeartRate"> | number | null
   userId?: Prisma.IntFilter<"GarminHeartRate"> | number
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
 export type GarminHeartRateOrderByWithRelationInput = {
@@ -219,10 +220,11 @@ export type GarminHeartRateOrderByWithRelationInput = {
   timestamp?: Prisma.SortOrder
   heartRate?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrder
+  user?: Prisma.UserOrderByWithRelationInput
 }
 
 export type GarminHeartRateWhereUniqueInput = Prisma.AtLeast<{
-  date_timestamp?: Prisma.GarminHeartRateDateTimestampCompoundUniqueInput
+  userId_date_timestamp?: Prisma.GarminHeartRateUserIdDateTimestampCompoundUniqueInput
   AND?: Prisma.GarminHeartRateWhereInput | Prisma.GarminHeartRateWhereInput[]
   OR?: Prisma.GarminHeartRateWhereInput[]
   NOT?: Prisma.GarminHeartRateWhereInput | Prisma.GarminHeartRateWhereInput[]
@@ -230,7 +232,8 @@ export type GarminHeartRateWhereUniqueInput = Prisma.AtLeast<{
   timestamp?: Prisma.StringFilter<"GarminHeartRate"> | string
   heartRate?: Prisma.IntNullableFilter<"GarminHeartRate"> | number | null
   userId?: Prisma.IntFilter<"GarminHeartRate"> | number
-}, "date_timestamp">
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+}, "userId_date_timestamp">
 
 export type GarminHeartRateOrderByWithAggregationInput = {
   date?: Prisma.SortOrder
@@ -258,7 +261,7 @@ export type GarminHeartRateCreateInput = {
   date: Date | string
   timestamp: string
   heartRate?: number | null
-  userId: number
+  user: Prisma.UserCreateNestedOneWithoutGarminHeartRatesInput
 }
 
 export type GarminHeartRateUncheckedCreateInput = {
@@ -272,7 +275,7 @@ export type GarminHeartRateUpdateInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   timestamp?: Prisma.StringFieldUpdateOperationsInput | string
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  userId?: Prisma.IntFieldUpdateOperationsInput | number
+  user?: Prisma.UserUpdateOneRequiredWithoutGarminHeartRatesNestedInput
 }
 
 export type GarminHeartRateUncheckedUpdateInput = {
@@ -293,7 +296,6 @@ export type GarminHeartRateUpdateManyMutationInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   timestamp?: Prisma.StringFieldUpdateOperationsInput | string
   heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  userId?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type GarminHeartRateUncheckedUpdateManyInput = {
@@ -303,7 +305,18 @@ export type GarminHeartRateUncheckedUpdateManyInput = {
   userId?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
-export type GarminHeartRateDateTimestampCompoundUniqueInput = {
+export type GarminHeartRateListRelationFilter = {
+  every?: Prisma.GarminHeartRateWhereInput
+  some?: Prisma.GarminHeartRateWhereInput
+  none?: Prisma.GarminHeartRateWhereInput
+}
+
+export type GarminHeartRateOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type GarminHeartRateUserIdDateTimestampCompoundUniqueInput = {
+  userId: number
   date: Date | string
   timestamp: string
 }
@@ -339,6 +352,120 @@ export type GarminHeartRateSumOrderByAggregateInput = {
   userId?: Prisma.SortOrder
 }
 
+export type GarminHeartRateCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.GarminHeartRateCreateWithoutUserInput, Prisma.GarminHeartRateUncheckedCreateWithoutUserInput> | Prisma.GarminHeartRateCreateWithoutUserInput[] | Prisma.GarminHeartRateUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.GarminHeartRateCreateOrConnectWithoutUserInput | Prisma.GarminHeartRateCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.GarminHeartRateCreateManyUserInputEnvelope
+  connect?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+}
+
+export type GarminHeartRateUncheckedCreateNestedManyWithoutUserInput = {
+  create?: Prisma.XOR<Prisma.GarminHeartRateCreateWithoutUserInput, Prisma.GarminHeartRateUncheckedCreateWithoutUserInput> | Prisma.GarminHeartRateCreateWithoutUserInput[] | Prisma.GarminHeartRateUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.GarminHeartRateCreateOrConnectWithoutUserInput | Prisma.GarminHeartRateCreateOrConnectWithoutUserInput[]
+  createMany?: Prisma.GarminHeartRateCreateManyUserInputEnvelope
+  connect?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+}
+
+export type GarminHeartRateUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.GarminHeartRateCreateWithoutUserInput, Prisma.GarminHeartRateUncheckedCreateWithoutUserInput> | Prisma.GarminHeartRateCreateWithoutUserInput[] | Prisma.GarminHeartRateUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.GarminHeartRateCreateOrConnectWithoutUserInput | Prisma.GarminHeartRateCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.GarminHeartRateUpsertWithWhereUniqueWithoutUserInput | Prisma.GarminHeartRateUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.GarminHeartRateCreateManyUserInputEnvelope
+  set?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  disconnect?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  delete?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  connect?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  update?: Prisma.GarminHeartRateUpdateWithWhereUniqueWithoutUserInput | Prisma.GarminHeartRateUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.GarminHeartRateUpdateManyWithWhereWithoutUserInput | Prisma.GarminHeartRateUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.GarminHeartRateScalarWhereInput | Prisma.GarminHeartRateScalarWhereInput[]
+}
+
+export type GarminHeartRateUncheckedUpdateManyWithoutUserNestedInput = {
+  create?: Prisma.XOR<Prisma.GarminHeartRateCreateWithoutUserInput, Prisma.GarminHeartRateUncheckedCreateWithoutUserInput> | Prisma.GarminHeartRateCreateWithoutUserInput[] | Prisma.GarminHeartRateUncheckedCreateWithoutUserInput[]
+  connectOrCreate?: Prisma.GarminHeartRateCreateOrConnectWithoutUserInput | Prisma.GarminHeartRateCreateOrConnectWithoutUserInput[]
+  upsert?: Prisma.GarminHeartRateUpsertWithWhereUniqueWithoutUserInput | Prisma.GarminHeartRateUpsertWithWhereUniqueWithoutUserInput[]
+  createMany?: Prisma.GarminHeartRateCreateManyUserInputEnvelope
+  set?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  disconnect?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  delete?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  connect?: Prisma.GarminHeartRateWhereUniqueInput | Prisma.GarminHeartRateWhereUniqueInput[]
+  update?: Prisma.GarminHeartRateUpdateWithWhereUniqueWithoutUserInput | Prisma.GarminHeartRateUpdateWithWhereUniqueWithoutUserInput[]
+  updateMany?: Prisma.GarminHeartRateUpdateManyWithWhereWithoutUserInput | Prisma.GarminHeartRateUpdateManyWithWhereWithoutUserInput[]
+  deleteMany?: Prisma.GarminHeartRateScalarWhereInput | Prisma.GarminHeartRateScalarWhereInput[]
+}
+
+export type GarminHeartRateCreateWithoutUserInput = {
+  date: Date | string
+  timestamp: string
+  heartRate?: number | null
+}
+
+export type GarminHeartRateUncheckedCreateWithoutUserInput = {
+  date: Date | string
+  timestamp: string
+  heartRate?: number | null
+}
+
+export type GarminHeartRateCreateOrConnectWithoutUserInput = {
+  where: Prisma.GarminHeartRateWhereUniqueInput
+  create: Prisma.XOR<Prisma.GarminHeartRateCreateWithoutUserInput, Prisma.GarminHeartRateUncheckedCreateWithoutUserInput>
+}
+
+export type GarminHeartRateCreateManyUserInputEnvelope = {
+  data: Prisma.GarminHeartRateCreateManyUserInput | Prisma.GarminHeartRateCreateManyUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type GarminHeartRateUpsertWithWhereUniqueWithoutUserInput = {
+  where: Prisma.GarminHeartRateWhereUniqueInput
+  update: Prisma.XOR<Prisma.GarminHeartRateUpdateWithoutUserInput, Prisma.GarminHeartRateUncheckedUpdateWithoutUserInput>
+  create: Prisma.XOR<Prisma.GarminHeartRateCreateWithoutUserInput, Prisma.GarminHeartRateUncheckedCreateWithoutUserInput>
+}
+
+export type GarminHeartRateUpdateWithWhereUniqueWithoutUserInput = {
+  where: Prisma.GarminHeartRateWhereUniqueInput
+  data: Prisma.XOR<Prisma.GarminHeartRateUpdateWithoutUserInput, Prisma.GarminHeartRateUncheckedUpdateWithoutUserInput>
+}
+
+export type GarminHeartRateUpdateManyWithWhereWithoutUserInput = {
+  where: Prisma.GarminHeartRateScalarWhereInput
+  data: Prisma.XOR<Prisma.GarminHeartRateUpdateManyMutationInput, Prisma.GarminHeartRateUncheckedUpdateManyWithoutUserInput>
+}
+
+export type GarminHeartRateScalarWhereInput = {
+  AND?: Prisma.GarminHeartRateScalarWhereInput | Prisma.GarminHeartRateScalarWhereInput[]
+  OR?: Prisma.GarminHeartRateScalarWhereInput[]
+  NOT?: Prisma.GarminHeartRateScalarWhereInput | Prisma.GarminHeartRateScalarWhereInput[]
+  date?: Prisma.DateTimeFilter<"GarminHeartRate"> | Date | string
+  timestamp?: Prisma.StringFilter<"GarminHeartRate"> | string
+  heartRate?: Prisma.IntNullableFilter<"GarminHeartRate"> | number | null
+  userId?: Prisma.IntFilter<"GarminHeartRate"> | number
+}
+
+export type GarminHeartRateCreateManyUserInput = {
+  date: Date | string
+  timestamp: string
+  heartRate?: number | null
+}
+
+export type GarminHeartRateUpdateWithoutUserInput = {
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  timestamp?: Prisma.StringFieldUpdateOperationsInput | string
+  heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type GarminHeartRateUncheckedUpdateWithoutUserInput = {
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  timestamp?: Prisma.StringFieldUpdateOperationsInput | string
+  heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type GarminHeartRateUncheckedUpdateManyWithoutUserInput = {
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  timestamp?: Prisma.StringFieldUpdateOperationsInput | string
+  heartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
 
 
 export type GarminHeartRateSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -346,6 +473,7 @@ export type GarminHeartRateSelect<ExtArgs extends runtime.Types.Extensions.Inter
   timestamp?: boolean
   heartRate?: boolean
   userId?: boolean
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["garminHeartRate"]>
 
 export type GarminHeartRateSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -353,6 +481,7 @@ export type GarminHeartRateSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   timestamp?: boolean
   heartRate?: boolean
   userId?: boolean
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["garminHeartRate"]>
 
 export type GarminHeartRateSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -360,6 +489,7 @@ export type GarminHeartRateSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   timestamp?: boolean
   heartRate?: boolean
   userId?: boolean
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["garminHeartRate"]>
 
 export type GarminHeartRateSelectScalar = {
@@ -370,10 +500,21 @@ export type GarminHeartRateSelectScalar = {
 }
 
 export type GarminHeartRateOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"date" | "timestamp" | "heartRate" | "userId", ExtArgs["result"]["garminHeartRate"]>
+export type GarminHeartRateInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}
+export type GarminHeartRateIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}
+export type GarminHeartRateIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+}
 
 export type $GarminHeartRatePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "GarminHeartRate"
-  objects: {}
+  objects: {
+    user: Prisma.$UserPayload<ExtArgs>
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     date: Date
     timestamp: string
@@ -773,6 +914,7 @@ readonly fields: GarminHeartRateFieldRefs;
  */
 export interface Prisma__GarminHeartRateClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -823,6 +965,10 @@ export type GarminHeartRateFindUniqueArgs<ExtArgs extends runtime.Types.Extensio
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
+  /**
    * Filter, which GarminHeartRate to fetch.
    */
   where: Prisma.GarminHeartRateWhereUniqueInput
@@ -841,6 +987,10 @@ export type GarminHeartRateFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.E
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
+  /**
    * Filter, which GarminHeartRate to fetch.
    */
   where: Prisma.GarminHeartRateWhereUniqueInput
@@ -858,6 +1008,10 @@ export type GarminHeartRateFindFirstArgs<ExtArgs extends runtime.Types.Extension
    * Omit specific fields from the GarminHeartRate
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
   /**
    * Filter, which GarminHeartRate to fetch.
    */
@@ -907,6 +1061,10 @@ export type GarminHeartRateFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Ex
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
+  /**
    * Filter, which GarminHeartRate to fetch.
    */
   where?: Prisma.GarminHeartRateWhereInput
@@ -954,6 +1112,10 @@ export type GarminHeartRateFindManyArgs<ExtArgs extends runtime.Types.Extensions
    * Omit specific fields from the GarminHeartRate
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
   /**
    * Filter, which GarminHeartRates to fetch.
    */
@@ -1003,6 +1165,10 @@ export type GarminHeartRateCreateArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
+  /**
    * The data needed to create a GarminHeartRate.
    */
   data: Prisma.XOR<Prisma.GarminHeartRateCreateInput, Prisma.GarminHeartRateUncheckedCreateInput>
@@ -1036,6 +1202,10 @@ export type GarminHeartRateCreateManyAndReturnArgs<ExtArgs extends runtime.Types
    */
   data: Prisma.GarminHeartRateCreateManyInput | Prisma.GarminHeartRateCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1050,6 +1220,10 @@ export type GarminHeartRateUpdateArgs<ExtArgs extends runtime.Types.Extensions.I
    * Omit specific fields from the GarminHeartRate
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
   /**
    * The data needed to update a GarminHeartRate.
    */
@@ -1102,6 +1276,10 @@ export type GarminHeartRateUpdateManyAndReturnArgs<ExtArgs extends runtime.Types
    * Limit how many GarminHeartRates to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1116,6 +1294,10 @@ export type GarminHeartRateUpsertArgs<ExtArgs extends runtime.Types.Extensions.I
    * Omit specific fields from the GarminHeartRate
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
   /**
    * The filter to search for the GarminHeartRate to update in case it exists.
    */
@@ -1142,6 +1324,10 @@ export type GarminHeartRateDeleteArgs<ExtArgs extends runtime.Types.Extensions.I
    * Omit specific fields from the GarminHeartRate
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
   /**
    * Filter which GarminHeartRate to delete.
    */
@@ -1174,4 +1360,8 @@ export type GarminHeartRateDefaultArgs<ExtArgs extends runtime.Types.Extensions.
    * Omit specific fields from the GarminHeartRate
    */
   omit?: Prisma.GarminHeartRateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GarminHeartRateInclude<ExtArgs> | null
 }

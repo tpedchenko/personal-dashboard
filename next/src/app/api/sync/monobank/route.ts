@@ -15,6 +15,7 @@ export async function POST() {
       await checkRateLimit(String(user.id), "/api/sync/monobank");
     } catch (e) {
       if (e instanceof RateLimitError) return rateLimitResponse(e);
+      console.warn("[rate-limit] Unexpected error in /api/sync/monobank, allowing request:", e);
     }
 
     const tokenValue = await getSecretValue(user.id, "monobank_token");

@@ -9,11 +9,9 @@ import {
   getUsers, inviteUser, removeUser, changeRole,
   inviteGuest, revokeInvite, getInvites,
   getTelegramLinks, unlinkTelegram,
-} from "@/actions/admin";
-import {
   getAuditLog, getAdminStats, exportUserDataCsv,
   getMonitoringStats, getErrorLogs, clearErrorLogs,
-} from "@/actions/admin-data";
+} from "@/actions/admin";
 import { fixMissingCurrencyConversion } from "@/actions/admin-fixes";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AdminUsersTab } from "./tabs/admin-users-tab";

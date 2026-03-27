@@ -33,7 +33,7 @@ import {
   type FeedbackPageStats,
   type PromptChange,
   type ABTestPageStats,
-} from "@/actions/insights";
+} from "@/actions/insights/index";
 import { DEFAULT_PROMPTS } from "@/lib/ai-insights-prompts";
 
 const PAGE_ICONS: Record<string, typeof SparklesIcon> = {

@@ -28,6 +28,7 @@ model User {
   telegramLinks TelegramLink[]
   aiInsights    AiInsight[]
   embeddings    Embedding[]
+  garminHeartRates GarminHeartRate[]
 
   @@map("users")
 }
@@ -79,6 +80,7 @@ model AuditLog {
 
   user User @relation(fields: [userEmail], references: [email])
 
+  @@index([action, createdAt], map: "idx_audit_log_action_created")
   @@map("audit_log")
 }
 
@@ -139,6 +141,8 @@ model Transaction {
   @@index([account], map: "idx_transactions_account")
   @@index([category], map: "idx_transactions_category")
   @@index([date, category, account], map: "idx_transactions_date_category_account")
+  @@index([userId, date], map: "idx_transactions_user_date")
+  @@index([userId, type, date], map: "idx_transactions_user_type_date")
   @@map("transactions")
 }
 
@@ -153,13 +157,14 @@ model NbuRate {
 
 model CustomAccount {
   id             Int    @id @default(autoincrement())
-  name           String @unique
+  name           String
   currency       String @default("EUR")
   isActive       Boolean @default(true) @map("is_active")
   sortOrder      Int    @default(0) @map("sort_order")
   initialBalance Float  @default(0) @map("initial_balance")
   userId         Int    @map("user_id")
 
+  @@unique([userId, name])
   @@map("custom_accounts")
 }
 
@@ -322,6 +327,7 @@ model ShoppingHistory {
   boughtBy   String? @default("app") @map("bought_by")
   userId     Int     @map("user_id")
 
+  @@index([userId], map: "idx_shopping_history_user")
   @@map("shopping_history")
 }
 
@@ -412,7 +418,10 @@ model GarminHeartRate {
   heartRate Int?     @map("heart_rate")
   userId    Int      @map("user_id")
 
-  @@id([date, timestamp])
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, date, timestamp])
+  @@index([userId])
   @@map("garmin_heart_rate")
 }
 

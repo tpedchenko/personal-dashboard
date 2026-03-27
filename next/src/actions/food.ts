@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/current-user";
-import { invalidateAiContextSnapshot } from "@/actions/chat-context";
+import { invalidateAiContextSnapshot } from "@/actions/chat-context/index";
 import { z } from "zod";
 import { dateSchema, addFoodEntrySchema } from "@/lib/validations";
 import { toDateOnly, dateToString } from "@/lib/date-utils";

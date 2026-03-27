@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { updateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireUser } from "@/lib/current-user";
-import { invalidateAiContextSnapshot } from "@/actions/chat-context";
+import { invalidateAiContextSnapshot } from "@/actions/chat-context/index";
 import { invalidateKpiCache } from "@/actions/dashboard/kpi";
 import { upsertEmbedding } from "@/lib/embeddings";
 import { z, ZodError } from "zod";

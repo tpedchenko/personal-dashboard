@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { updateTag } from "next/cache";
 import { CACHE_TAGS } from "@/lib/cache-tags";
 import { requireUser } from "@/lib/current-user";
-import { invalidateAiContextSnapshot } from "@/actions/chat-context";
+import { invalidateAiContextSnapshot } from "@/actions/chat-context/index";
 import { computeWeeklyBudget } from "./finance-utils";
 
 // ---------- Budgets ----------

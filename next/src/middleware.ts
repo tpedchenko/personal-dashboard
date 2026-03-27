@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { verifyDemoToken, DEMO_COOKIE } from "@/lib/demo-token";
 
 export async function middleware(req: NextRequest) {
@@ -22,14 +23,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // NextAuth v5 uses "authjs" cookie prefix
-  const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith("https://");
-  const sessionCookieName = useSecureCookies
-    ? "__Secure-authjs.session-token"
-    : "authjs.session-token";
-  const sessionCookie = req.cookies.get(sessionCookieName)?.value;
+  // Verify JWT session token (checks signature + expiry, not just cookie existence)
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+    secureCookie: process.env.NEXTAUTH_URL?.startsWith("https://"),
+  });
 
-  if (!sessionCookie) {
+  if (!token?.email) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     return NextResponse.redirect(loginUrl);
   }

@@ -13,8 +13,6 @@ import {
   ScaleIcon,
   TrendingUpIcon,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatKidsHours } from "@/lib/utils";
 import { PeriodSelector, type PeriodPreset, getDateRange } from "@/components/ui/period-selector";
 import {
   getDashboardKPIs,
@@ -44,7 +42,6 @@ import {
 } from "@/actions/dashboard";
 
 import { ErrorBoundary } from "@/components/shared/error-boundary";
-import { EmptyState } from "@/components/shared/empty-state";
 import { InsightsPanel } from "@/components/insights/insights-panel";
 import { usePageShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useChartColors } from "@/hooks/use-chart-colors";
@@ -54,6 +51,9 @@ import { GarminHealthCharts } from "./garmin-health-charts";
 import { ExerciseProgressChart } from "./exercise-progress-chart";
 import { IncomeExpensesChart } from "./income-expenses-chart";
 import { PortfolioHistoryChart, type PortfolioHistoryPoint } from "./portfolio-history-chart";
+import { PortfolioSummaryCard } from "./portfolio-summary-card";
+import { DailyLogsCard } from "./daily-logs-card";
+import { ExpenseBreakdownCard } from "./expense-breakdown-card";
 import {
   KpiGridSkeleton,
   MoodTimelineSkeleton,
@@ -118,64 +118,6 @@ function pctChange(
 /* ------------------------------------------------------------------ */
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
-
-function PortfolioSummaryCard({ onHistoryLoaded }: { onHistoryLoaded?: (data: PortfolioHistoryPoint[]) => void }) {
-  const tDash = useTranslations("dashboard");
-  const [data, setData] = useState<{ totalPortfolio: number; totalPnl: number; positionsCount: number } | null>(null);
-
-  useEffect(() => {
-    fetch("/api/capital").then(r => r.ok ? r.json() : null).then(d => {
-      if (d) {
-        setData({ totalPortfolio: d.totalPortfolio ?? 0, totalPnl: d.totalPnl ?? 0, positionsCount: d.positionsCount ?? 0 });
-        // Save today's snapshot
-        fetch("/api/portfolio-snapshot", { method: "POST" }).catch(() => {});
-      }
-    }).catch(() => {});
-    // Load portfolio history
-    import("@/actions/finance/portfolio-snapshots").then(({ getPortfolioHistory }) => {
-      getPortfolioHistory(90).then(history => {
-        if (onHistoryLoaded && history.length > 0) onHistoryLoaded(history);
-      });
-    }).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (!data || (data.totalPortfolio === 0 && data.positionsCount === 0)) {
-    return (
-      <Card>
-        <CardContent>
-          <EmptyState
-            icon={TrendingUpIcon}
-            title={tDash("connect_broker_hint")}
-          />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-xs text-muted-foreground">{tDash("portfolio")}</p>
-            <p className="text-lg font-bold">EUR {data.totalPortfolio.toLocaleString("en", { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{tDash("pnl")}</p>
-            <p className={`text-lg font-bold ${data.totalPnl >= 0 ? "text-income" : "text-expense"}`}>
-              {data.totalPnl >= 0 ? "+" : ""}EUR {data.totalPnl.toLocaleString("en", { minimumFractionDigits: 2 })}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">{tDash("positions")}</p>
-            <p className="text-lg font-bold">{data.positionsCount}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function DashboardPage({
   initialKpis,
@@ -336,6 +278,18 @@ export function DashboardPage({
     [startTransition],
   );
 
+  const handleDailyLogsToggle = useCallback(() => {
+    if (!dailyLogsOpen && !allDailyLogs) {
+      startTransition(async () => {
+        const logs = await getAllDailyLogs();
+        setAllDailyLogs(logs);
+        setDailyLogsOpen(true);
+      });
+    } else {
+      setDailyLogsOpen(!dailyLogsOpen);
+    }
+  }, [dailyLogsOpen, allDailyLogs, startTransition]);
+
   const incomeExpensesData = trends.map((m) => ({
     name: MONTH_LABELS[m.month - 1],
     income: m.income,
@@ -423,70 +377,12 @@ export function DashboardPage({
 
       {/* Daily Logs Table (collapsible) */}
       <ErrorBoundary moduleName="Daily Logs">
-      <Card>
-        <CardHeader
-          className="cursor-pointer select-none"
-          onClick={() => {
-            if (!dailyLogsOpen && !allDailyLogs) {
-              startTransition(async () => {
-                const logs = await getAllDailyLogs();
-                setAllDailyLogs(logs);
-                setDailyLogsOpen(true);
-              });
-            } else {
-              setDailyLogsOpen(!dailyLogsOpen);
-            }
-          }}
-        >
-          <CardTitle className="text-base flex items-center gap-2">
-            {dailyLogsOpen ? "\u25BC" : "\u25B6"} {t("daily_records") || "\u0417\u0430\u043F\u0438\u0441\u0438 \u044F\u043A\u043E\u0441\u0442\u0456 \u0436\u0438\u0442\u0442\u044F"}
-          </CardTitle>
-        </CardHeader>
-        {dailyLogsOpen && allDailyLogs && (
-          <CardContent>
-            <div className="overflow-x-auto max-h-96">
-              <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-background">
-                  <tr className="border-b">
-                    <th className="text-left py-1.5 px-1">{t("date_col")}</th>
-                    <th className="text-center py-1.5 px-1">{t("mood")}</th>
-                    <th className="text-center py-1.5 px-1">{t("energy")}</th>
-                    <th className="text-center py-1.5 px-1">{t("stress")}</th>
-                    <th className="text-center py-1.5 px-1">{t("focus")}</th>
-                    <th className="text-center py-1.5 px-1">{t("kids")}</th>
-                    <th className="text-center py-1.5 px-1">{t("sex")}</th>
-                    <th className="text-center py-1.5 px-1">{t("bj")}</th>
-                    <th className="text-center py-1.5 px-1">{t("alc")}</th>
-                    <th className="text-center py-1.5 px-1">{t("caf")}</th>
-                    <th className="text-center py-1.5 px-1">{t("level")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allDailyLogs.map((log) => (
-                    <tr key={log.date} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="py-1.5 px-1 font-mono">{log.date}</td>
-                      <td className="text-center py-1.5 px-1">{log.moodDelta ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.energyLevel ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.stressLevel ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.focusQuality ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.kidsHours != null ? formatKidsHours(log.kidsHours) : "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.sexCount ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.bjCount ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.alcohol ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">{log.caffeine ?? "\u2014"}</td>
-                      <td className="text-center py-1.5 px-1">
-                        <span className={log.level != null ? (log.level >= 2 ? "text-income" : log.level < 0 ? "text-expense" : "") : ""}>
-                          {log.level != null ? Number(log.level).toFixed(1) : "\u2014"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        )}
-      </Card>
+      <DailyLogsCard
+        isOpen={dailyLogsOpen}
+        onToggle={handleDailyLogsToggle}
+        logs={allDailyLogs}
+        isPending={isPending}
+      />
       </ErrorBoundary>
 
       {/* Garmin Health Charts (body battery, sleep, steps, HRV, weight) */}
@@ -561,42 +457,8 @@ export function DashboardPage({
 
       {/* Expense Breakdown */}
       <ErrorBoundary moduleName={t("expense_breakdown")}>
-      {isPending || !deepDive ? <ExpenseBreakdownSkeleton /> : deepDive.categoryBreakdown.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Expense Breakdown</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {t("total_expenses_label")}: <span className="font-semibold text-red-400">EUR {deepDive.totalExpenses.toLocaleString("en")}</span>
-              {" "} | {t("avg_per_day")}: <span className="font-semibold text-red-400">EUR {deepDive.avgDailyExpense.toLocaleString("en")}</span>
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {deepDive.categoryBreakdown.map((row) => {
-                const barWidth = deepDive.categoryBreakdown[0]
-                  ? Math.round((row.amount / deepDive.categoryBreakdown[0].amount) * 100)
-                  : 0;
-                return (
-                  <div key={row.category}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{row.category}</span>
-                      <span className="text-muted-foreground">
-                        EUR {row.amount.toLocaleString("en")}
-                        <span className="text-xs ml-1 opacity-60">{row.percentage}%</span>
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-red-400/70"
-                        style={{ width: `${barWidth}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+      {isPending || !deepDive ? <ExpenseBreakdownSkeleton /> : (
+        <ExpenseBreakdownCard deepDive={deepDive} />
       )}
       </ErrorBoundary>
 

@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       await checkRateLimit(String(user.id), "/api/sync/garmin");
     } catch (e) {
       if (e instanceof RateLimitError) return rateLimitResponse(e);
+      console.warn("[rate-limit] Unexpected error in /api/sync/garmin, allowing request:", e);
     }
 
     // Get Garmin credentials (decrypted)
@@ -103,6 +104,7 @@ export async function GET() {
       await checkRateLimit(String(user.id), "/api/sync/garmin");
     } catch (e) {
       if (e instanceof RateLimitError) return rateLimitResponse(e);
+      console.warn("[rate-limit] Unexpected error in /api/sync/garmin, allowing request:", e);
     }
 
     const [garminEmailValue, lastSyncPref, dailyCount, mfaStatusPref] = await Promise.all([

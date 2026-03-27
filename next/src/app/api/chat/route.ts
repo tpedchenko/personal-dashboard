@@ -5,12 +5,24 @@ import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { getUserContext } from "@/actions/chat-context";
+import { getUserContext } from "@/actions/chat-context/index";
 import { parseIntent } from "@/lib/chat-intent";
 import { buildRagContext, getRagCacheKey } from "@/lib/rag-context";
 import { cached } from "@/lib/cache";
 import { logError } from "@/lib/error-logger";
 import { checkRateLimit, RateLimitError, rateLimitResponse } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const ALLOWED_MODELS = ["gemini", "groq", "ollama"] as const;
+
+const chatRequestSchema = z.object({
+  messages: z.array(z.object({
+    role: z.string(),
+    content: z.string().optional(),
+    parts: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional(),
+  })).min(1, "messages must not be empty"),
+  model: z.enum(ALLOWED_MODELS).optional().default("gemini"),
+});
 
 async function saveChat(role: string, content: string, email: string) {
   try {
@@ -37,17 +49,21 @@ export async function POST(req: Request) {
     await checkRateLimit(session.user.email, "/api/chat");
   } catch (e) {
     if (e instanceof RateLimitError) return rateLimitResponse(e);
+    console.warn("[rate-limit] Unexpected error in /api/chat, allowing request:", e);
   }
 
-  const { messages: rawMessages, model: modelName } = await req.json();
+  const body = await req.json();
+  const parsed = chatRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    return new Response(
+      JSON.stringify({ error: parsed.error.issues[0]?.message || "Invalid request" }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  const { messages: rawMessages, model: modelName } = parsed.data;
 
   // Convert UIMessage format to CoreMessage format for streamText
-  interface RawMessage {
-    role: string;
-    content?: string;
-    parts?: Array<{ type: string; text?: string }>;
-  }
-  const messages = (rawMessages as RawMessage[]).map((m) => {
+  const messages = rawMessages.map((m) => {
     const text = typeof m.content === "string" ? m.content
       : Array.isArray(m.parts) ? m.parts.filter((p) => p.type === "text").map((p) => p.text ?? "").join("") : "";
     return { role: m.role as "user" | "assistant", content: text };

@@ -31,9 +31,18 @@ const ALLOWED_PATHS = new Set([
   "start", "stop", "reload_config", "pair_history",
 ]);
 
-function isAllowedPath(pathParts: string[]): boolean {
+// Destructive endpoints that must only be called via POST
+const POST_ONLY_PATHS = new Set([
+  "forcebuy", "forceentry", "forcesell", "forceexit",
+  "start", "stop", "reload_config",
+]);
+
+function isAllowedPath(pathParts: string[], method: string): boolean {
   if (pathParts.length === 0) return false;
-  return ALLOWED_PATHS.has(pathParts[0]);
+  const endpoint = pathParts[0];
+  if (!ALLOWED_PATHS.has(endpoint)) return false;
+  if (POST_ONLY_PATHS.has(endpoint) && method !== "POST") return false;
+  return true;
 }
 
 /**
@@ -128,7 +137,7 @@ async function proxyToFreqtrade(
       );
     }
 
-    if (!isAllowedPath(path)) {
+    if (!isAllowedPath(path, request.method)) {
       return NextResponse.json({ error: "Endpoint not allowed" }, { status: 403 });
     }
     const freqtradePath = "/api/v1/" + path.join("/");

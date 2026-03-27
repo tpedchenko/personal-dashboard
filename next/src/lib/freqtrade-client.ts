@@ -2,10 +2,17 @@
  * Freqtrade REST API client.
  * Connects to Freqtrade bot API for trading data.
  * Uses HTTP Basic authentication.
+ *
+ * Config resolution order:
+ * 1. User secrets from DB (freqtrade_api_url, freqtrade_username, freqtrade_password)
+ * 2. Environment variables (FREQTRADE_URL, FREQTRADE_USER, FREQTRADE_PASS)
  */
 
+import { getCurrentUserId } from "@/lib/current-user";
+import { prisma } from "@/lib/db";
+
 /** Read env vars at runtime — bypass Next.js build-time inlining */
-function getConfig() {
+function getEnvConfig() {
   // Use dynamic property access to prevent Next.js from inlining at build time
   const env = globalThis.process?.env ?? {};
   return {
@@ -15,6 +22,44 @@ function getConfig() {
   };
 }
 
+/** Read a user secret from DB, decrypting if needed. */
+async function readSecret(userId: number, key: string): Promise<string | null> {
+  const secret = await prisma.secret.findUnique({
+    where: { userId_key: { userId, key } },
+  });
+  if (!secret?.value) return null;
+  try {
+    const { decryptGraceful } = await import("@/lib/encryption");
+    return decryptGraceful(secret.value);
+  } catch {
+    return secret.value;
+  }
+}
+
+/** Get Freqtrade config: try user secrets from DB first, fall back to env vars */
+async function getConfig() {
+  try {
+    const userId = await getCurrentUserId();
+    if (userId) {
+      const [dbUrl, dbUser, dbPass] = await Promise.all([
+        readSecret(userId, "freqtrade_api_url"),
+        readSecret(userId, "freqtrade_username"),
+        readSecret(userId, "freqtrade_password"),
+      ]);
+      if (dbUrl) {
+        return {
+          url: dbUrl,
+          user: dbUser ?? "",
+          pass: dbPass ?? "",
+        };
+      }
+    }
+  } catch {
+    // No authenticated user or DB error — fall back to env vars
+  }
+  return getEnvConfig();
+}
+
 interface FreqtradeResponse<T = unknown> {
   data: T | null;
   error: string | null;
@@ -22,7 +67,7 @@ interface FreqtradeResponse<T = unknown> {
 
 async function ftFetch<T>(endpoint: string, options?: RequestInit): Promise<FreqtradeResponse<T>> {
   try {
-    const { url, user, pass } = getConfig();
+    const { url, user, pass } = await getConfig();
     if (!url || url === "http://localhost:8082") {
       console.error("[Freqtrade] FREQTRADE_URL not set! env:", process.env.FREQTRADE_URL, "fallback:", url);
     }
