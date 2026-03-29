@@ -69,9 +69,11 @@ export const ModelName = {
   MandatoryCategory: 'MandatoryCategory',
   RecurringTransaction: 'RecurringTransaction',
   SavingsGoal: 'SavingsGoal',
+  Subscription: 'Subscription',
   DailyLog: 'DailyLog',
   FoodLog: 'FoodLog',
   ShoppingItem: 'ShoppingItem',
+  BigPurchase: 'BigPurchase',
   ShoppingHistory: 'ShoppingHistory',
   GarminDaily: 'GarminDaily',
   GarminActivity: 'GarminActivity',
@@ -335,6 +337,26 @@ export const SavingsGoalScalarFieldEnum = {
 export type SavingsGoalScalarFieldEnum = (typeof SavingsGoalScalarFieldEnum)[keyof typeof SavingsGoalScalarFieldEnum]
 
 
+export const SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  provider: 'provider',
+  amount: 'amount',
+  currency: 'currency',
+  billingCycle: 'billingCycle',
+  nextBilling: 'nextBilling',
+  category: 'category',
+  isActive: 'isActive',
+  url: 'url',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[keyof typeof SubscriptionScalarFieldEnum]
+
+
 export const DailyLogScalarFieldEnum = {
   id: 'id',
   date: 'date',
@@ -392,6 +414,28 @@ export const ShoppingItemScalarFieldEnum = {
 } as const
 
 export type ShoppingItemScalarFieldEnum = (typeof ShoppingItemScalarFieldEnum)[keyof typeof ShoppingItemScalarFieldEnum]
+
+
+export const BigPurchaseScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  description: 'description',
+  estimatedPrice: 'estimatedPrice',
+  currency: 'currency',
+  url: 'url',
+  category: 'category',
+  status: 'status',
+  investigateNotes: 'investigateNotes',
+  coolingStartedAt: 'coolingStartedAt',
+  coolingDays: 'coolingDays',
+  confirmedAt: 'confirmedAt',
+  purchasedAt: 'purchasedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BigPurchaseScalarFieldEnum = (typeof BigPurchaseScalarFieldEnum)[keyof typeof BigPurchaseScalarFieldEnum]
 
 
 export const ShoppingHistoryScalarFieldEnum = {

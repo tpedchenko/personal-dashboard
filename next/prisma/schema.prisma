@@ -245,6 +245,26 @@ model SavingsGoal {
   @@map("savings_goals")
 }
 
+model Subscription {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  name         String
+  provider     String    // YouTube, Google, Microsoft, OpenAI, etc.
+  amount       Float
+  currency     String    @default("EUR")
+  billingCycle String    @default("monthly") @map("billing_cycle") // monthly, yearly, weekly
+  nextBilling  DateTime? @map("next_billing") @db.Date
+  category     String?   // entertainment, productivity, ai, storage, etc.
+  isActive     Boolean   @default(true) @map("is_active")
+  url          String?   // link to manage subscription
+  notes        String?
+  createdAt    DateTime? @default(now()) @map("created_at")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+
+  @@index([userId], map: "idx_subscriptions_user")
+  @@map("subscriptions")
+}
+
 // =========================================================================
 // Daily Log & Lifestyle
 // =========================================================================
@@ -317,6 +337,28 @@ model ShoppingItem {
 
   @@index([boughtAt], map: "idx_shopping_items_bought")
   @@map("shopping_items")
+}
+
+model BigPurchase {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @map("user_id")
+  name             String
+  description      String?
+  estimatedPrice   Float?    @map("estimated_price")
+  currency         String    @default("EUR")
+  url              String?
+  category         String?   // electronics, furniture, appliances, transport, etc.
+  status           String    @default("investigating") // investigating, cooling_off, ready, purchased, cancelled
+  investigateNotes String?   @map("investigate_notes") @db.Text
+  coolingStartedAt DateTime? @map("cooling_started_at")
+  coolingDays      Int       @default(7) @map("cooling_days")
+  confirmedAt      DateTime? @map("confirmed_at")
+  purchasedAt      DateTime? @map("purchased_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId, status], map: "idx_big_purchases_user_status")
+  @@map("big_purchases")
 }
 
 model ShoppingHistory {

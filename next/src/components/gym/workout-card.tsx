@@ -7,7 +7,6 @@ import {
   Trash2Icon,
   ClockIcon,
   ChevronDownIcon,
-  ChevronUpIcon,
   PencilIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -118,13 +117,13 @@ export function WorkoutCard({
   return (
     <Card>
       <CardHeader
-        className="cursor-pointer"
+        className="cursor-pointer select-none"
         onClick={() => onToggleExpand(workout.id)}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div>
-              <CardTitle className="text-base">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="min-w-0">
+              <CardTitle className="text-base truncate">
                 {workout.workoutName ?? workout.programType ?? workout.date}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -134,26 +133,22 @@ export function WorkoutCard({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {workout.durationMinutes && (
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="tabular-nums">
                 <ClockIcon className="size-3 mr-0.5" />
-                {workout.durationMinutes} {t("min")}
+                {workout.durationMinutes}{t("min")}
               </Badge>
             )}
-            <Badge variant="outline">
+            <Badge variant="outline" className="tabular-nums">
               {workout.exercises.length} {t("exercises").toLowerCase()}
             </Badge>
             {!workout.endTime && (
-              <Badge variant="default">
+              <Badge variant="default" className="bg-green-500/90 text-white">
                 {t("active_workout")}
               </Badge>
             )}
-            {isExpanded ? (
-              <ChevronUpIcon className="size-4" />
-            ) : (
-              <ChevronDownIcon className="size-4" />
-            )}
+            <ChevronDownIcon className={`size-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
           </div>
         </div>
       </CardHeader>

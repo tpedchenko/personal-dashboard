@@ -402,9 +402,11 @@ export const ModelName = {
   MandatoryCategory: 'MandatoryCategory',
   RecurringTransaction: 'RecurringTransaction',
   SavingsGoal: 'SavingsGoal',
+  Subscription: 'Subscription',
   DailyLog: 'DailyLog',
   FoodLog: 'FoodLog',
   ShoppingItem: 'ShoppingItem',
+  BigPurchase: 'BigPurchase',
   ShoppingHistory: 'ShoppingHistory',
   GarminDaily: 'GarminDaily',
   GarminActivity: 'GarminActivity',
@@ -454,7 +456,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "guestInvite" | "passkey" | "userPreference" | "auditLog" | "secret" | "telegramLink" | "telegramConnectCode" | "transaction" | "nbuRate" | "customAccount" | "categoryFavourite" | "customCategory" | "budget" | "budgetConfig" | "mandatoryCategory" | "recurringTransaction" | "savingsGoal" | "dailyLog" | "foodLog" | "shoppingItem" | "shoppingHistory" | "garminDaily" | "garminActivity" | "garminSleep" | "garminHeartRate" | "garminStaging" | "garminBodyComposition" | "withingsMeasurement" | "embedding" | "aiNote" | "aiContextSnapshot" | "aiInsight" | "insightFeedback" | "chatHistory" | "gymExercise" | "gymWorkout" | "gymWorkoutExercise" | "gymSet" | "gymProgram" | "gymProgramDay" | "gymProgramExercise" | "syncFailure" | "taxDeclaration" | "taxDeclarationItem" | "receipt" | "taxIncomeRecord" | "taxDeadline" | "taxDocument" | "taxSimulation" | "brokerPosition" | "brokerAccountSummary" | "brokerTransaction" | "tradingStrategy" | "portfolioSnapshot"
+    modelProps: "user" | "guestInvite" | "passkey" | "userPreference" | "auditLog" | "secret" | "telegramLink" | "telegramConnectCode" | "transaction" | "nbuRate" | "customAccount" | "categoryFavourite" | "customCategory" | "budget" | "budgetConfig" | "mandatoryCategory" | "recurringTransaction" | "savingsGoal" | "subscription" | "dailyLog" | "foodLog" | "shoppingItem" | "bigPurchase" | "shoppingHistory" | "garminDaily" | "garminActivity" | "garminSleep" | "garminHeartRate" | "garminStaging" | "garminBodyComposition" | "withingsMeasurement" | "embedding" | "aiNote" | "aiContextSnapshot" | "aiInsight" | "insightFeedback" | "chatHistory" | "gymExercise" | "gymWorkout" | "gymWorkoutExercise" | "gymSet" | "gymProgram" | "gymProgramDay" | "gymProgramExercise" | "syncFailure" | "taxDeclaration" | "taxDeclarationItem" | "receipt" | "taxIncomeRecord" | "taxDeadline" | "taxDocument" | "taxSimulation" | "brokerPosition" | "brokerAccountSummary" | "brokerTransaction" | "tradingStrategy" | "portfolioSnapshot"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1790,6 +1792,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Subscription: {
+      payload: Prisma.$SubscriptionPayload<ExtArgs>
+      fields: Prisma.SubscriptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SubscriptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SubscriptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        findFirst: {
+          args: Prisma.SubscriptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SubscriptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        findMany: {
+          args: Prisma.SubscriptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>[]
+        }
+        create: {
+          args: Prisma.SubscriptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        createMany: {
+          args: Prisma.SubscriptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SubscriptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>[]
+        }
+        delete: {
+          args: Prisma.SubscriptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        update: {
+          args: Prisma.SubscriptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.SubscriptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SubscriptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SubscriptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.SubscriptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SubscriptionPayload>
+        }
+        aggregate: {
+          args: Prisma.SubscriptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSubscription>
+        }
+        groupBy: {
+          args: Prisma.SubscriptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubscriptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SubscriptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SubscriptionCountAggregateOutputType> | number
+        }
+      }
+    }
     DailyLog: {
       payload: Prisma.$DailyLogPayload<ExtArgs>
       fields: Prisma.DailyLogFieldRefs
@@ -2009,6 +2085,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ShoppingItemCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ShoppingItemCountAggregateOutputType> | number
+        }
+      }
+    }
+    BigPurchase: {
+      payload: Prisma.$BigPurchasePayload<ExtArgs>
+      fields: Prisma.BigPurchaseFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BigPurchaseFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BigPurchaseFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>
+        }
+        findFirst: {
+          args: Prisma.BigPurchaseFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BigPurchaseFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>
+        }
+        findMany: {
+          args: Prisma.BigPurchaseFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>[]
+        }
+        create: {
+          args: Prisma.BigPurchaseCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>
+        }
+        createMany: {
+          args: Prisma.BigPurchaseCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BigPurchaseCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>[]
+        }
+        delete: {
+          args: Prisma.BigPurchaseDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>
+        }
+        update: {
+          args: Prisma.BigPurchaseUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>
+        }
+        deleteMany: {
+          args: Prisma.BigPurchaseDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BigPurchaseUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BigPurchaseUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>[]
+        }
+        upsert: {
+          args: Prisma.BigPurchaseUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BigPurchasePayload>
+        }
+        aggregate: {
+          args: Prisma.BigPurchaseAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBigPurchase>
+        }
+        groupBy: {
+          args: Prisma.BigPurchaseGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BigPurchaseGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BigPurchaseCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BigPurchaseCountAggregateOutputType> | number
         }
       }
     }
@@ -4762,6 +4912,26 @@ export const SavingsGoalScalarFieldEnum = {
 export type SavingsGoalScalarFieldEnum = (typeof SavingsGoalScalarFieldEnum)[keyof typeof SavingsGoalScalarFieldEnum]
 
 
+export const SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  provider: 'provider',
+  amount: 'amount',
+  currency: 'currency',
+  billingCycle: 'billingCycle',
+  nextBilling: 'nextBilling',
+  category: 'category',
+  isActive: 'isActive',
+  url: 'url',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[keyof typeof SubscriptionScalarFieldEnum]
+
+
 export const DailyLogScalarFieldEnum = {
   id: 'id',
   date: 'date',
@@ -4819,6 +4989,28 @@ export const ShoppingItemScalarFieldEnum = {
 } as const
 
 export type ShoppingItemScalarFieldEnum = (typeof ShoppingItemScalarFieldEnum)[keyof typeof ShoppingItemScalarFieldEnum]
+
+
+export const BigPurchaseScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  description: 'description',
+  estimatedPrice: 'estimatedPrice',
+  currency: 'currency',
+  url: 'url',
+  category: 'category',
+  status: 'status',
+  investigateNotes: 'investigateNotes',
+  coolingStartedAt: 'coolingStartedAt',
+  coolingDays: 'coolingDays',
+  confirmedAt: 'confirmedAt',
+  purchasedAt: 'purchasedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BigPurchaseScalarFieldEnum = (typeof BigPurchaseScalarFieldEnum)[keyof typeof BigPurchaseScalarFieldEnum]
 
 
 export const ShoppingHistoryScalarFieldEnum = {
@@ -5614,9 +5806,11 @@ export type GlobalOmitConfig = {
   mandatoryCategory?: Prisma.MandatoryCategoryOmit
   recurringTransaction?: Prisma.RecurringTransactionOmit
   savingsGoal?: Prisma.SavingsGoalOmit
+  subscription?: Prisma.SubscriptionOmit
   dailyLog?: Prisma.DailyLogOmit
   foodLog?: Prisma.FoodLogOmit
   shoppingItem?: Prisma.ShoppingItemOmit
+  bigPurchase?: Prisma.BigPurchaseOmit
   shoppingHistory?: Prisma.ShoppingHistoryOmit
   garminDaily?: Prisma.GarminDailyOmit
   garminActivity?: Prisma.GarminActivityOmit

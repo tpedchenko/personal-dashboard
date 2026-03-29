@@ -108,6 +108,11 @@ export type RecurringTransaction = Prisma.RecurringTransactionModel
  */
 export type SavingsGoal = Prisma.SavingsGoalModel
 /**
+ * Model Subscription
+ * 
+ */
+export type Subscription = Prisma.SubscriptionModel
+/**
  * Model DailyLog
  * 
  */
@@ -122,6 +127,11 @@ export type FoodLog = Prisma.FoodLogModel
  * 
  */
 export type ShoppingItem = Prisma.ShoppingItemModel
+/**
+ * Model BigPurchase
+ * 
+ */
+export type BigPurchase = Prisma.BigPurchaseModel
 /**
  * Model ShoppingHistory
  * 

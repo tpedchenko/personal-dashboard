@@ -185,9 +185,9 @@ export function FinancePage({
 
       {/* ===== Account Balances + Weekly Budget (left) & Category Breakdown (right) ===== */}
       <ErrorBoundary moduleName="Account Balances & Budget">
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
         {/* Left column: Account Balances + Weekly Budget */}
-        <div className="space-y-3">
+        <div className="space-y-3 sm:space-y-4">
           <AccountBalancesCard accountBalances={data.accountBalances} />
           {initialWeeklyBudget && (
             <WeeklyBudgetCard weeklyBudget={initialWeeklyBudget} />

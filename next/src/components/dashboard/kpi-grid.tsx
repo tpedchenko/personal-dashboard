@@ -91,27 +91,30 @@ function KpiCard({
   icon,
   change,
   improvementDirection = "up",
-}: KpiCardProps) {
+  index = 0,
+}: KpiCardProps & { index?: number }) {
   const t = useTranslations("dashboard");
   return (
-    <Card className="metric-card" data-testid={`kpi-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`}>
+    <Card className={`metric-card stagger-${Math.min(index + 1, 6)}`} data-testid={`kpi-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`}>
       <CardContent className="pt-3 pb-2.5 px-3 sm:pt-4 sm:pb-3 sm:px-4">
-        <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-          <span className="text-xs font-medium text-muted-foreground truncate">
+        <div className="flex items-center justify-between mb-1 sm:mb-1.5">
+          <span className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">
             {title}
           </span>
-          <span className="text-muted-foreground hidden sm:inline">{icon}</span>
+          <span className="text-muted-foreground/60 hidden sm:inline">{icon}</span>
         </div>
-        <p className="text-base sm:text-xl font-bold truncate">{value}</p>
+        <p className="text-lg sm:text-2xl font-bold tracking-tight truncate">{value}</p>
         {subtitle && (
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         )}
         {change !== undefined && (
+          <div className="mt-1">
           <ChangeIndicator
             change={change ?? null}
             improvementDirection={improvementDirection}
             suffix={t("vs_previous")}
           />
+          </div>
         )}
       </CardContent>
     </Card>
@@ -124,9 +127,9 @@ function KpiCard({
 
 export function KpiGrid({ cards }: KpiGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2 sm:gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2.5 sm:gap-3">
       {cards.map((card, i) => (
-        <KpiCard key={i} {...card} />
+        <KpiCard key={i} {...card} index={i} />
       ))}
     </div>
   );

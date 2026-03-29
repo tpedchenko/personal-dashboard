@@ -325,7 +325,7 @@ export function DashboardPage({
   const kpiCards = activeTab === "finance" ? financeCards : activeTab === "training" ? trainingCards : lifeCards;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Header + Period Selector */}
       <div className="flex flex-col gap-3">
         <h1 className="sr-only">Dashboard</h1>

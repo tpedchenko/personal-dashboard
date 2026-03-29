@@ -38,13 +38,13 @@ export function RecoveryChips({ muscleGroups }: { muscleGroups: MuscleRecoveryIt
       {sorted.map((mg) => {
         const pct = getRecoveryPct(mg.lastWorked, mg.recoveryHours);
         const hours = getHoursSince(mg.lastWorked);
-        const bgColor = pct > 80 ? "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30"
-          : pct >= 50 ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30"
-          : "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
+        const bgColor = pct > 80 ? "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/25"
+          : pct >= 50 ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/25"
+          : "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/25";
         return (
-          <span key={mg.name} data-testid="recovery-chip" className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs border ${bgColor}`}>
+          <span key={mg.name} data-testid="recovery-chip" className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${bgColor}`}>
             {t(`muscle_groups.${mg.name}`) || mg.name}
-            <span className="font-semibold">{formatTimeSince(hours)}</span>
+            <span className="font-bold tabular-nums text-[11px]">{formatTimeSince(hours)}</span>
           </span>
         );
       })}

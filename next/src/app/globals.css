@@ -891,6 +891,18 @@
   background: linear-gradient(to bottom right, var(--card-bg-start), var(--card-bg-end));
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   animation: fadeInUp 0.4s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.03) 100%);
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .metric-card:hover {
@@ -899,13 +911,19 @@
   border-color: var(--card-hover-border);
 }
 
+.metric-card:hover::after {
+  opacity: 1;
+}
+
 /* Staggered animation delay utility classes */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
+.stagger-1 { animation-delay: 0.04s; }
+.stagger-2 { animation-delay: 0.08s; }
+.stagger-3 { animation-delay: 0.12s; }
+.stagger-4 { animation-delay: 0.16s; }
+.stagger-5 { animation-delay: 0.2s; }
+.stagger-6 { animation-delay: 0.24s; }
+.stagger-7 { animation-delay: 0.28s; }
+.stagger-8 { animation-delay: 0.32s; }
 
 /* ── D5.2 Focus ring ── */
 

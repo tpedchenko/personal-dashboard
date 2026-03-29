@@ -9,12 +9,12 @@ function KpiCardSkeleton() {
   return (
     <Card className="metric-card">
       <CardContent className="pt-3 pb-2.5 px-3 sm:pt-4 sm:pb-3 sm:px-4">
-        <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+        <div className="flex items-center justify-between mb-1 sm:mb-1.5">
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-4 w-4 rounded hidden sm:block" />
         </div>
-        <Skeleton className="h-6 w-20 mt-1" />
-        <Skeleton className="h-3 w-14 mt-1.5" />
+        <Skeleton className="h-7 w-20 mt-1" />
+        <Skeleton className="h-3 w-14 mt-2" />
       </CardContent>
     </Card>
   );
@@ -22,7 +22,7 @@ function KpiCardSkeleton() {
 
 export function KpiGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2 sm:gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2.5 sm:gap-3">
       {Array.from({ length: count }).map((_, i) => (
         <KpiCardSkeleton key={i} />
       ))}

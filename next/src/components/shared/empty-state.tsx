@@ -6,14 +6,21 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   action?: React.ReactNode;
+  compact?: boolean;
 }
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, description, action, compact }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      {Icon && <Icon className="size-10 text-muted-foreground/40 mb-3" />}
-      <p className="text-muted-foreground font-medium">{title}</p>
-      {description && <p className="text-sm text-muted-foreground/70 mt-1 max-w-sm">{description}</p>}
+    <div className={`flex flex-col items-center justify-center text-center ${compact ? "py-6" : "py-12"}`}>
+      {Icon && (
+        <div className="rounded-2xl bg-muted/60 p-4 mb-4">
+          <Icon className="size-8 text-muted-foreground/50" />
+        </div>
+      )}
+      <p className="text-sm font-medium text-muted-foreground">{title}</p>
+      {description && (
+        <p className="text-xs text-muted-foreground/60 mt-1.5 max-w-xs leading-relaxed">{description}</p>
+      )}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

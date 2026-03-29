@@ -93,6 +93,11 @@ def authenticate_garmin(email: str, password: str, garth_dir: str,
                         mfa_code: str | None = None):
     """Create and authenticate a Garmin Connect client.
 
+    Uses garth token persistence to avoid full SSO login on every sync run.
+    Tokens are saved to garth_dir and reloaded on subsequent calls.
+    The client.login(garth_dir) call handles token refresh internally —
+    no extra verification API call is needed.
+
     Args:
         email: Garmin Connect email
         password: Garmin Connect password
@@ -114,20 +119,26 @@ def authenticate_garmin(email: str, password: str, garth_dir: str,
 
     Path(garth_dir).mkdir(parents=True, exist_ok=True)
 
-    # Try loading saved garth session first (avoids fresh login / rate limits)
+    # Try loading saved garth session first (avoids fresh SSO login / rate limits).
+    # client.login(garth_dir) loads tokens from disk and verifies the session
+    # by fetching profile + settings — no extra get_user_summary() needed.
     try:
         client = Garmin(email, password)
         client.login(garth_dir)
-        # Verify session is still valid with a lightweight API call
-        client.get_user_summary()
+        _log.info("Garmin: resumed session from cached tokens in %s", garth_dir)
+        # Save refreshed tokens back (garth may have refreshed OAuth tokens)
+        try:
+            client.garth.dump(garth_dir)
+        except Exception:
+            pass
         return client
     except Exception as e:
         err_str = str(e)
         # If we got a 429 even on session resume, propagate it immediately
         if "429" in err_str or "Too Many Requests" in err_str:
             raise
-        # Otherwise, session is stale — try fresh login below
-        pass
+        # Otherwise, session is stale or tokens missing — try fresh login below
+        _log.info("Garmin: cached session unavailable (%s), doing fresh login", err_str[:80])
 
     # Fresh login -- may trigger MFA
     client = Garmin(email, password, return_on_mfa=True)
@@ -137,12 +148,14 @@ def authenticate_garmin(email: str, password: str, garth_dir: str,
         if mfa_code:
             client.resume_login(client_state, mfa_code)
             client.garth.dump(garth_dir)
+            _log.info("Garmin: fresh login with MFA completed, tokens saved to %s", garth_dir)
             return client
         else:
             raise GarminMFARequired(client, client_state)
 
     # No MFA needed
     client.garth.dump(garth_dir)
+    _log.info("Garmin: fresh login completed, tokens saved to %s", garth_dir)
     return client
 
 
@@ -451,11 +464,8 @@ def sync_garmin_data(client, conn,
         _log.error("Garmin sync_body_composition failed: %s", e, exc_info=True)
         counts["errors"] += 1
 
-    # Save session
-    try:
-        client.garth.dump(str(client.garth.dir) if hasattr(client.garth, 'dir') else "")
-    except Exception:
-        pass
+    # Note: token saving is the caller's responsibility (scheduler / webapp)
+    # since only the caller knows the correct garth_dir path.
 
     return counts
 

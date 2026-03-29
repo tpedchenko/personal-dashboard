@@ -2,8 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { WalletIcon } from "lucide-react";
+import { WalletIcon, CreditCardIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/shared/empty-state";
 import type { AccountBalanceData } from "./finance-types";
 
 export interface AccountBalancesCardProps {
@@ -12,8 +13,7 @@ export interface AccountBalancesCardProps {
 
 export function AccountBalancesCard({ accountBalances }: AccountBalancesCardProps) {
   const t = useTranslations("finance");
-
-  if (accountBalances.length === 0) return null;
+  const tc = useTranslations("common");
 
   const grouped = new Map<string, AccountBalanceData[]>();
   for (const ab of accountBalances) {
@@ -31,40 +31,49 @@ export function AccountBalancesCard({ accountBalances }: AccountBalancesCardProp
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {Array.from(grouped.entries()).map(([currency, accs]) => (
-          <div key={currency} className="mb-2 last:mb-0">
-            <div className="mb-1 text-xs font-medium text-muted-foreground">
-              {currency}
-            </div>
-            <div className="space-y-1">
-              {accs.map((ab) => (
-                <div
-                  key={ab.name}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <Link
-                    href={`/finance/transactions?account=${encodeURIComponent(ab.name)}`}
-                    className="truncate hover:underline"
+        {accountBalances.length === 0 ? (
+          <EmptyState
+            icon={CreditCardIcon}
+            title={tc("no_data")}
+            description={t("connect_bank_hint") || "Connect a bank account to see balances"}
+            compact
+          />
+        ) : (
+          Array.from(grouped.entries()).map(([currency, accs]) => (
+            <div key={currency} className="mb-3 last:mb-0">
+              <div className="mb-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {currency}
+              </div>
+              <div className="space-y-1">
+                {accs.map((ab) => (
+                  <div
+                    key={ab.name}
+                    className="flex items-center justify-between text-sm py-0.5"
                   >
-                    {ab.name}
-                  </Link>
-                  <span
-                    className={`font-semibold tabular-nums ${
-                      ab.balance >= 0
-                        ? "text-income"
-                        : "text-expense"
-                    }`}
-                  >
-                    {ab.balance.toLocaleString("en", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              ))}
+                    <Link
+                      href={`/finance/transactions?account=${encodeURIComponent(ab.name)}`}
+                      className="truncate hover:underline text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {ab.name}
+                    </Link>
+                    <span
+                      className={`font-semibold tabular-nums ${
+                        ab.balance >= 0
+                          ? "text-income"
+                          : "text-expense"
+                      }`}
+                    >
+                      {ab.balance.toLocaleString("en", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );

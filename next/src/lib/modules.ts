@@ -53,7 +53,7 @@ export const ALL_MODULES: ModuleDefinition[] = [
     descriptionKey: "finance_desc",
     navKeys: ["finance"],
     routes: ["/finance"],
-    financeSubTabKeys: ["my_finances", "transactions"],
+    financeSubTabKeys: ["my_finances", "transactions", "subscriptions", "shopping"],
     group: "finance",
   },
   {

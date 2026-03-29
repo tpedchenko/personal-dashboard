@@ -643,25 +643,50 @@ export function GymPage({
   }, [recommendation, programs]);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl sm:text-2xl font-bold">{t("title")}</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3">
+        <h1 className="sr-only">{t("title")}</h1>
+        <PeriodSelector
+          value={periodPreset}
+          onChange={handlePeriodChange}
+          customFrom={customFrom}
+          customTo={customTo}
+          onCustomChange={(from, to) => {
+            dispatch({ type: "SET_CUSTOM_RANGE", from, to });
+          }}
+        />
+      </div>
 
-      <PeriodSelector
-        value={periodPreset}
-        onChange={handlePeriodChange}
-        customFrom={customFrom}
-        customTo={customTo}
-        onCustomChange={(from, to) => {
-          dispatch({ type: "SET_CUSTOM_RANGE", from, to });
-        }}
-      />
+      {/* Quick Stats */}
+      <ErrorBoundary moduleName="Gym Stats">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        <Card size="sm" className="metric-card stagger-1">
+          <CardContent>
+            <div className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 truncate">{t("workouts")}</div>
+            <div className="text-xl sm:text-2xl font-bold tracking-tight">{stats.totalWorkouts}</div>
+          </CardContent>
+        </Card>
+        <Card size="sm" className="metric-card stagger-2">
+          <CardContent>
+            <div className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 truncate">{t("total_volume")}</div>
+            <div className="text-xl sm:text-2xl font-bold tracking-tight">{stats.totalVolume ? `${(stats.totalVolume / 1000).toFixed(1)}t` : "\u2014"}</div>
+          </CardContent>
+        </Card>
+        <Card size="sm" className="metric-card stagger-3">
+          <CardContent>
+            <div className="text-[11px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 truncate">Avg / wk</div>
+            <div className="text-xl sm:text-2xl font-bold tracking-tight">{stats.sessionsPerWeek.toFixed(1)}<span className="text-sm font-normal text-muted-foreground">/wk</span></div>
+          </CardContent>
+        </Card>
+      </div>
+      </ErrorBoundary>
 
       {/* Muscle Recovery — always visible at top */}
       <ErrorBoundary moduleName="Muscle Recovery">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">{t("muscle_recovery")}</CardTitle>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-red-500" /> {t("recovery_training")}</span>
             <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-yellow-500" /> {t("recovery_recovering")}</span>
             <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-green-400" /> {t("recovery_almost_ready")}</span>
